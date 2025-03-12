@@ -1,0 +1,21 @@
+<!-- pages.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Pages</title>
+</head>
+
+<body>
+  <h1>Available Pages</h1>
+  <ul>
+    <% Object.entries(pages).forEach(([pageName, pagePath]) => { %>
+    <li><a href="/<%= pagePath %>"><%= pageName %></a></li>
+    <% }); %>
+
+  </ul>
+</body>
+
+</html>

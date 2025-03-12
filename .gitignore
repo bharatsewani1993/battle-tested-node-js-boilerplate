@@ -1,0 +1,7 @@
+/node_modules
+/.vscode
+/.vscode/settings.json
+/unzip/
+/unzipped/
+.env
+package-lock.json

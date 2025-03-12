@@ -1,0 +1,166 @@
+/* CSS Reset */
+
+/* Remove default browser margins */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+li,
+blockquote,
+pre,
+hr {
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove default browser styles */
+body,
+button,
+input,
+select,
+textarea {
+    font-family: Arial, sans-serif;
+}
+
+/* Remove list styling */
+ul,
+ol {
+    list-style: none;
+}
+
+/* Remove hyperlink styling */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Remove borders */
+img,
+iframe,
+embed,
+object,
+video {
+    border: none;
+}
+
+/* Set default box-sizing */
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+}
+
+
+/*css start here*/
+#navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Distribute items evenly */
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 20px 20px;
+}
+
+.menu {
+    flex: 1;
+    /* Allow menu items to take up remaining space */
+    text-align: center;
+    /* Center align menu items */
+}
+
+.menu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.menu li {
+    display: inline-block;
+    margin-right: 20px;
+    /* Add some spacing between menu items */
+}
+
+.menu li:last-child {
+    margin-right: 0;
+    /* Remove margin from last menu item */
+}
+
+.menu li a {
+    text-decoration: none;
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.cta-btn {
+    background-color: #8b3dff;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.cta-btn:hover {
+    background-color: #6b2abf;
+}
+
+
+/*hero section*/
+.hero {
+    background-color: #f9f9f9;
+    padding: 100px 20px;
+    text-align: center;
+}
+
+.hero-heading {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.hero-description {
+    font-size: 1.2em;
+    margin-bottom: 40px;
+    color: #666;
+}
+
+.cta-btn {
+    background-color: #8b3dff;
+    color: #ffffff;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.cta-btn:hover {
+    background-color: #6b2abf;
+}
+
+@media (max-width: 768px) {
+    .hero-heading {
+        font-size: 2.5em;
+    }
+
+    .hero-description {
+        font-size: 1em;
+    }
+
+    .cta-btn {
+        padding: 12px 25px;
+        font-size: 1em;
+    }
+}

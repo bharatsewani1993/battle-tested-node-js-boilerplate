@@ -1,0 +1,27 @@
+name: mazahost
+
+on:
+  #push:
+    #branches:
+      - production
+
+jobs:
+  deployment:
+    runs-on: mazahost-prod-api
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Update Lockfile
+        run: npm install --omit=dev
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Start server application
+        run: npm run prod
