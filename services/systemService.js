@@ -1,6 +1,6 @@
-const { success, failure } = require('../../objects/return.objects');
-const { catchBlockErrorHandler } = require('../../utils/errorHandler');
-const ENV = require('../../env/index').envSettings();
+const { success, failure } = require('../objects/return.objects');
+const { catchBlockErrorHandler } = require('../utils/errorHandler');
+const ENV = require('../env/index').envSettings();
 
 const getProjectRoot = async () => {
     try {

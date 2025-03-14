@@ -3,7 +3,7 @@ const redis = require('../config/redis');
 const { MESSAGES } = require("../constants/constants");
 const ENV = require('../env/index').envSettings();
 const { envVariablesArr } = require('../constants/envVariables');
-const { redisMaster } = require('../services/system/redisService');
+const { redisMaster } = require('../services/redisService');
 const { GOD_ADMIN } = require('../constants/godAdmin');
 
 //list not available env variables

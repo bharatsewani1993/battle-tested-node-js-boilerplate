@@ -1,9 +1,9 @@
 module.exports = {
     STAGE: 'LOCAL',
     PORT: 3000,
-    DATABASE_NAME: '',
+    DATABASE_NAME: 'boilerplate',
     DATABASE_USER: 'root',
-    DATABASE_PASSWORD: '',
+    DATABASE_PASSWORD: 'Qwerty@123',
     DATABASE_HOST: '127.0.0.1',
     LOGGING: false,
     DIALECT: 'mysql',

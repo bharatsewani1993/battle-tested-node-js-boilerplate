@@ -1,5 +1,5 @@
-const { createBackup } = require('../../utils/dbBackup');
-const { catchBlockErrorHandler } = require('../../utils/errorHandler');
+const { createBackup } = require('../utils/dbBackup');
+const { catchBlockErrorHandler } = require('../utils/errorHandler');
 
 
 const createDBBackup = async () => {

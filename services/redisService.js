@@ -1,8 +1,8 @@
-const { catchBlockErrorHandler } = require('../../utils/errorHandler');
-const { channelsToSubscribeArr } = require('../../config/redisChannels');
-const redis = require('../../config/redis');
-const ENV = require('../../env/index').envSettings();
-const { success, failure } = require('../../objects/return.objects');
+const { catchBlockErrorHandler } = require('../utils/errorHandler');
+const { channelsToSubscribeArr } = require('../config/redisChannels');
+const redis = require('../config/redis');
+const ENV = require('../env/index').envSettings();
+const { success, failure } = require('../objects/return.objects');
 
 //set redis object
 const set = async (obj) => {

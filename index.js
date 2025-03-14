@@ -7,7 +7,7 @@ const port = ENV.PORT;
 const { master } = require('./utils/boot');
 const { initCron } = require('./controllers/cronController');
 const emailTemplates = require("./templates/email");
-const emailService = require("./services/system/emailService");
+const emailService = require("./services/emailService");
 const rateLimit = require('express-rate-limit');
 const requestIp = require('request-ip');
 const redis = require("./config/redis");
@@ -70,7 +70,7 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Preflight request handling
 
 //import the routes
-const systemRoutes = require('./routers/public/systemRouter');
+const systemRoutes = require('./routers/systemRouter');
 
 //using routes
 app.use('', systemRoutes);
