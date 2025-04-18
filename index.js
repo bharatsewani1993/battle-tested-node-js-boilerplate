@@ -4,7 +4,7 @@ let cors = require('cors');
 const ENV = require('./env/index').envSettings();
 const app = express();
 const port = ENV.PORT;
-const { master } = require('./utils/boot');
+const startupScripts = require('./startupScripts');
 const { initCron } = require('./controllers/cronController');
 const emailTemplates = require("./templates/email");
 const emailService = require("./services/emailService");
@@ -109,8 +109,8 @@ redis.ping((err, result) => {
         console.log('Database synchronized successfully');
 
         // Start the server
-        app.listen(port, () => {
-          master();
+        app.listen(port, async () => {
+          await startupScripts();
           console.log(`\nServer started on port ${port}`);
           if (ENV.CRON_ENABLED) {
             initCron();

@@ -15,18 +15,14 @@ permissionModel.init({
         autoIncrement: true,
         primaryKey: true
     },
-    organizationId: {
-        type: DataTypes.INTEGER(),
-        allowNull: false
-    },
     name: {
         type: DataTypes.STRING(100),
         allowNull: false
     },
     key: {
         type: DataTypes.STRING(100),
-        allowNull: false
-        // Examples: 'create_project', 'delete_task', 'invite_member'
+        allowNull: false,
+        unique: true // ensure no duplicates across system
     },
     description: {
         type: DataTypes.STRING(500),
@@ -35,16 +31,16 @@ permissionModel.init({
     module: {
         type: DataTypes.STRING(50),
         allowNull: false
-        // Examples: 'projects', 'tasks', 'members'
     },
     isDefault: {
         type: DataTypes.INTEGER(1),
         allowNull: false,
-        defaultValue: 0  // 0: Custom permission, 1: Default permission
+        defaultValue: 1 // All are system-defined now
     },
     createdBy: {
         type: DataTypes.INTEGER(),
-        allowNull: false
+        allowNull: false,
+        defaultValue: 0 // 0 = system/admin
     },
     active: {
         type: DataTypes.INTEGER(1),
@@ -60,4 +56,4 @@ permissionModel.init({
     }
 );
 
-module.exports = permissionModel; 
+module.exports = permissionModel;

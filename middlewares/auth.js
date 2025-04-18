@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const ENV = require("../env/index").envSettings();
-const CONSTANTS = require("../constants/constants");
-const CATCH_MESSAGES = require("../constants/catchMessages");
 const { set, get } = require('../services/redisService.js');
-const userModel = require("../models/userModel.js")
+
+
+
 const createAuthentication = async (tokenDetails) => {
 
   const token = jwt.sign(tokenDetails,
@@ -13,17 +13,18 @@ const createAuthentication = async (tokenDetails) => {
   );
   return token;
 }
+
 const validateAuth = async (req, res, next) => {
   try {
     if (!req.headers.authorization) {
       console.log("No authorization header");
       return res.status(401).send({
         success: false,
-        message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+        message: "Login required",
       });
     }
 
-   
+
     const token = req.headers.authorization;
     try {
       const decoded = jwt.verify(token, ENV.JWT_SECRET_KEY);
@@ -33,22 +34,22 @@ const validateAuth = async (req, res, next) => {
       if (!redisObj.success) {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       }
 
-      req.redisData = redisObj.data; 
+      req.redisData = redisObj.data;
       return next();
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       } else {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       }
     }
@@ -66,7 +67,7 @@ const validateAuthAndRole = (roleArr) => async (req, res, next) => {
     if (!req.headers.authorization) {
       return res.status(401).send({
         success: false,
-        message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+        message: "Login required",
       });
     }
 
@@ -77,7 +78,7 @@ const validateAuthAndRole = (roleArr) => async (req, res, next) => {
       if (!redisObj.success) {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       }
       if (roleArr.includes(redisObj.data.userRole)) {
@@ -93,12 +94,12 @@ const validateAuthAndRole = (roleArr) => async (req, res, next) => {
       if (error.name === 'TokenExpiredError') {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       } else {
         return res.status(401).send({
           success: false,
-          message: CONSTANTS.MESSAGES.LOGIN_REQUIRED,
+          message: "Login required",
         });
       }
     }

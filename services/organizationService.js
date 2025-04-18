@@ -1,4 +1,3 @@
-const CONSTANTS = require("../constants/constants");
 const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
 const organizationUserModel = require('../models/organizationUserModel.js');

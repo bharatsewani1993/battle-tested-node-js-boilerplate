@@ -1,5 +1,5 @@
+const { envVariablesArr } = require('../objects/envVariable.objects');
 const ENV = require('../env/index').envSettings();
-const { envVariablesArr } = require('../constants/envVariables');
 
 //list not available env variables
 const requiredEnvVariables = async () => {
@@ -27,11 +27,4 @@ const requiredEnvVariables = async () => {
     }
 }
 
-
-let master = async function () {
-    await requiredEnvVariables();
-}
-
-module.exports = {
-    master
-}
+module.exports = requiredEnvVariables;

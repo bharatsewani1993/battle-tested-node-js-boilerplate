@@ -1,5 +1,4 @@
 
-const CONSTANTS = require("../constants/constants");
 const ENV = require('../env/index').envSettings();
 const { success, failure } = require('../objects/return.objects');
 const userModel = require('../models/userModel');
@@ -99,7 +98,6 @@ const getVerifyEmailOTP = async (otpObj) => {
                 userId: userId,
                 key: `${userId}_${email}`,
                 expiry: 7200,
-                role: CONSTANTS.ROLE.USER
             };
 
             set(userObj);
