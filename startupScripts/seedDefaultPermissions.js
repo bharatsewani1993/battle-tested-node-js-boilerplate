@@ -2,7 +2,6 @@ const sequelize = require('../config/mysql');
 const Permission = require('../models/permissionModel');
 const defaultPermissions = require('../objects/permission.objects');
 
-
 const seedDefaultPermissions = async () => {
     try {
         await sequelize.authenticate();
