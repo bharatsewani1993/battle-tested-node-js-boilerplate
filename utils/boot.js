@@ -1,10 +1,5 @@
-let bcrypt = require('bcrypt');
-const redis = require('../config/redis');
-const { MESSAGES } = require("../constants/constants");
 const ENV = require('../env/index').envSettings();
 const { envVariablesArr } = require('../constants/envVariables');
-const { redisMaster } = require('../services/system/redisService');
-const { GOD_ADMIN } = require('../constants/godAdmin');
 
 //list not available env variables
 const requiredEnvVariables = async () => {
@@ -35,7 +30,6 @@ const requiredEnvVariables = async () => {
 
 let master = async function () {
     await requiredEnvVariables();
-    //  await redisMaster();
 }
 
 module.exports = {

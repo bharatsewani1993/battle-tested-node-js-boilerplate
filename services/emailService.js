@@ -1,7 +1,7 @@
 const sgMail = require('@sendgrid/mail');
-const ENV = require('../../env/index').envSettings();
+const ENV = require('../env/index').envSettings();
 sgMail.setApiKey(ENV.SENDGRID_API_KEY);
-const { success, failure } = require('../../objects/return.objects');
+const { success, failure } = require('../objects/return.objects');
 
 
 const sendEmail = async (emailObj) => {

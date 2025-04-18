@@ -1,6 +1,6 @@
 const { failure } = require('../objects/return.objects');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
-const systemService = require('../services/system/systemService');
+const systemService = require('../services/systemService');
 
 const getProjectRoot = async (req, res, next) => {
     try {

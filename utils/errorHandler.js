@@ -1,5 +1,5 @@
 const emailTemplates = require("../templates/email");
-const emailService = require("../services/system/emailService");
+const emailService = require("../services/emailService");
 const ENV = require('../env/index').envSettings();
 const { errorMessageParser } = require('../utils/errorMessageParser');
 

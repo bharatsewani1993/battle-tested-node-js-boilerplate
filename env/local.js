@@ -1,14 +1,14 @@
 module.exports = {
     STAGE: 'LOCAL',
     PORT: 3000,
-    DATABASE_NAME: '',
+    DATABASE_NAME: 'node-js-boilerplate',
     DATABASE_USER: 'root',
-    DATABASE_PASSWORD: '',
+    DATABASE_PASSWORD: 'Qwerty@123',
     DATABASE_HOST: '127.0.0.1',
     LOGGING: false,
     DIALECT: 'mysql',
     DB_ALTER: { alter: true },
-    JWT_SECRET_KEY: '',
+    JWT_SECRET_KEY: 'sdsadlkfsdklafjsdlkfjsdklfjsdklfsklf',
     LEVEL: 0, //set compression level..
     LOCAL_UPLOAD_FOLDER: './uploads',
     SENDGRID_API_KEY: '',
