@@ -1,8 +1,7 @@
-const { catchBlockErrorHandler } = require('../../utils/errorHandler');
-const { channelsToSubscribeArr } = require('../../config/redisChannels');
-const redis = require('../../config/redis');
-const ENV = require('../../env/index').envSettings();
-const { success, failure } = require('../../objects/return.objects');
+const { catchBlockErrorHandler } = require('../utils/errorHandler');
+const redis = require('../config/redis');
+const ENV = require('../env/index').envSettings();
+const { success, failure } = require('../objects/return.objects');
 
 //set redis object
 const set = async (obj) => {
@@ -51,81 +50,7 @@ const get = async (key) => {
     }
 }
 
-
-
-//subscribe redis channels, this function will trigger in boot file.
-const subscribeRedisChannels = async () => {
-    try {
-        channelsToSubscribeArr.forEach((channelName) => {
-            redis.subscribe(channelName);
-        });
-    } catch (error) {
-        catchBlockErrorHandler(error);
-        const failureObj = failure();
-        failureObj.message = error.message;
-        return failureObj;
-    }
-}
-
-//start listening to all subscribed channels.
-//this function will trigger in boot file.
-const listenRedisChannels = async () => {
-    try {
-        redis.on('message', (channel, message) => {
-            console.log(`Received message on channel ${channel}: ${message}`);
-
-            switch (channel) {
-                case `${ENV.PROJECT_ID}_SIGNUP_CHANNEL`:
-                    //call your function on specific channel message.
-                    //createFreelancerProfile(message);
-                    break;
-                default:
-                    return null;
-            }
-
-        });
-    } catch (error) {
-        catchBlockErrorHandler(error);
-        const failureObj = failure();
-        failureObj.message = error.message;
-        return failureObj;
-    }
-};
-
-//this function will handle redis errors
-const handleRedisErrors = async () => {
-    try {
-        redis.on('error', (error) => {
-            console.error('Redis Channel error:', error);
-        });
-    } catch (error) {
-        catchBlockErrorHandler(error);
-        const failureObj = failure();
-        failureObj.message = error.message;
-        return failureObj;
-    }
-}
-
-const redisMaster = async () => {
-    try {
-        await subscribeRedisChannels();
-        await listenRedisChannels();
-        await handleRedisErrors();
-    } catch (error) {
-        catchBlockErrorHandler(error);
-        const failureObj = failure();
-        failureObj.message = error.message;
-        return failureObj;
-    }
-}
-
-
-
 module.exports = {
     set,
     get,
-    subscribeRedisChannels,
-    listenRedisChannels,
-    handleRedisErrors,
-    redisMaster,
 }

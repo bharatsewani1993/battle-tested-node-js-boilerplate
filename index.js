@@ -71,9 +71,12 @@ app.options('*', cors(corsOptions)); // Preflight request handling
 
 //import the routes
 const systemRoutes = require('./routers/systemRouter');
+const userRoutes = require('./routers/userRouter');
 
 //using routes
+app.use('/api/v1/users', userRoutes);
 app.use('', systemRoutes);
+
 
 
 if (ENV.STAGE != 'LOCAL') {
