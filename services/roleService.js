@@ -8,7 +8,7 @@ const getAllRoles = async (redisKey) => {
         // Get organization ID from Redis using user ID
         const redisData = await get(redisKey);
 
-        if (!redisData.success || !redisData.data || !redisData.data.orgId) {
+        if (!redisData.success || !redisData.data || !redisData.data.organizationId) {
             const failureObj = failure();
             failureObj.message = "No organization selected";
             return failureObj;

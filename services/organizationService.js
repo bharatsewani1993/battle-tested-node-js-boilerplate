@@ -2,6 +2,8 @@ const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
 const organizationUserModel = require('../models/organizationUserModel.js');
 const roleModel = require('../models/roleModel');
+const permissionModel = require('../models/permissionModel');
+const rolePermissionModel = require('../models/rolePermissionModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { set } = require('./redisService.js');
 
@@ -34,6 +36,18 @@ const createOrganization = async (orgObj) => {
             roleId: ownerRole.id,
             inviteStatus: 'accepted'
         });
+
+        // Get all permissions and assign them to the owner role        
+        const allPermissions = await permissionModel.findAll();
+
+        // Assign all permissions to the owner role
+        const permissionAssignments = allPermissions.map(permission => ({
+            roleId: ownerRole.id,
+            permissionId: permission.id,
+            createdBy: orgObj.ownerId
+        }));
+
+        await rolePermissionModel.bulkCreate(permissionAssignments);
 
         // Set current organization in Redis
         const redisObj = {

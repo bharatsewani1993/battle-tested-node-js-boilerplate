@@ -95,9 +95,9 @@ const assignPermissionsToRole = async (permObj) => {
         const { roleId, permissionIds = [], redisKey, userId } = permObj;
 
         // Validate input
-        if (!roleId || !Array.isArray(permissionIds) || permissionIds.length === 0) {
+        if (!roleId || !Array.isArray(permissionIds)) {
             const failureObj = failure();
-            failureObj.message = "Invalid roleId or empty permissionIds";
+            failureObj.message = "Invalid roleId or permissionIds";
             return failureObj;
         }
 
@@ -132,9 +132,7 @@ const assignPermissionsToRole = async (permObj) => {
                 id: {
                     [Op.in]: permissionIds
                 },
-                active: 1,
-                // Uncomment the following line if permissions are organization-specific
-                // organizationId
+                active: 1
             }
         });
 
@@ -144,56 +142,38 @@ const assignPermissionsToRole = async (permObj) => {
             return failureObj;
         }
 
-        // Get already assigned permissions to the role
-        const existingRolePermissions = await rolePermissionModel.findAll({
-            where: {
-                roleId,
-                permissionId: {
-                    [Op.in]: permissionIds
-                },
-                active: 1
-            },
-            attributes: ['permissionId']
+        // 🔥 DELETE all previous permissions for this role
+        await rolePermissionModel.destroy({
+            where: { roleId }
         });
 
-        const existingPermissionIds = new Set(existingRolePermissions.map(rp => rp.permissionId));
-        const newPermissionIds = permissionIds.filter(id => !existingPermissionIds.has(id));
-
-        // Prepare new role-permission entries
-        const rolePermissions = newPermissionIds.map(permissionId => ({
-            roleId,
-            permissionId,
-            createdBy: userId,
-            active: 1
-        }));
-
-        // Bulk create if new permissions are available
-        if (rolePermissions.length > 0) {
-            await rolePermissionModel.bulkCreate(rolePermissions, {
-                ignoreDuplicates: true // in case of race conditions
-            });
+        // ✅ Insert new permissions if any
+        if (permissionIds.length > 0) {
+            const rolePermissions = permissionIds.map(permissionId => ({
+                roleId,
+                permissionId,
+                createdBy: userId,
+                active: 1
+            }));
+            await rolePermissionModel.bulkCreate(rolePermissions);
         }
 
-        const responseData = {
-            roleId,
-            assignedPermissions: newPermissionIds,
-            totalPermissions: [...existingPermissionIds, ...newPermissionIds]
-        };
-
         const successObj = success();
-        successObj.message = rolePermissions.length > 0
-            ? "Permissions assigned to role successfully"
-            : "All permissions were already assigned to this role";
-        successObj.data.push(responseData);
+        successObj.message = "Permissions updated successfully";
+        successObj.data.push({
+            roleId,
+            assignedPermissions: permissionIds
+        });
 
         return successObj;
     } catch (error) {
         catchBlockErrorHandler(error);
         const failureObj = failure();
-        failureObj.message = error.message || "An error occurred while assigning permissions";
+        failureObj.message = error.message || "An error occurred while updating role permissions";
         return failureObj;
     }
 };
+
 
 module.exports = {
     getAllPermissions,
