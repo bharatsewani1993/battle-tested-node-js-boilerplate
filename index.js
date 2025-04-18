@@ -73,10 +73,12 @@ app.options('*', cors(corsOptions)); // Preflight request handling
 const systemRoutes = require('./routers/systemRouter');
 const userRoutes = require('./routers/userRouter');
 const organizationRoutes = require('./routers/organizationRouter');
+const roleRoutes = require('./routers/roleRouter');
 
 //using routes
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
+app.use('/api/v1/roles', roleRoutes);
 app.use('', systemRoutes);
 
 

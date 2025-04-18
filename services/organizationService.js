@@ -2,6 +2,7 @@ const CONSTANTS = require("../constants/constants");
 const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
 const organizationUserModel = require('../models/organizationUserModel.js');
+const roleModel = require('../models/roleModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { set } = require('./redisService.js');
 
@@ -14,22 +15,31 @@ const createOrganization = async (orgObj) => {
             ownerId: orgObj.ownerId
         };
 
-
         // Create organization in database
         const createdOrg = await organizationModel.create(insertObj);
 
-        // Add owner to organization_users table
+        // Create owner role for the organization
+        const ownerRole = await roleModel.create({
+            name: 'Owner',
+            description: 'Organization owner with all permissions',
+            isDefault: 0,  // Not a default role, but a custom one
+            organizationId: createdOrg.id,
+            createdBy: orgObj.ownerId,
+            active: 1
+        });
+
+        // Add owner to organization_users table with the new roleId
         await organizationUserModel.create({
             organizationId: createdOrg.id,
             userId: orgObj.ownerId,
-            role: 'owner',
+            roleId: ownerRole.id,
             inviteStatus: 'accepted'
         });
 
         // Set current organization in Redis
         const redisObj = {
             key: orgObj.key,
-            orgId: createdOrg.id,
+            organizationId: createdOrg.id,
             expiry: 86400 // 24 hours
         };
         await set(redisObj);
