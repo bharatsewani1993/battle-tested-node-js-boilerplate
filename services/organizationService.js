@@ -1,6 +1,7 @@
 const CONSTANTS = require("../constants/constants");
 const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
+const organizationUserModel = require('../models/organizationUserModel.js');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { set } = require('./redisService.js');
 
@@ -16,6 +17,14 @@ const createOrganization = async (orgObj) => {
 
         // Create organization in database
         const createdOrg = await organizationModel.create(insertObj);
+
+        // Add owner to organization_users table
+        await organizationUserModel.create({
+            organizationId: createdOrg.id,
+            userId: orgObj.ownerId,
+            role: 'owner',
+            inviteStatus: 'accepted'
+        });
 
         // Set current organization in Redis
         const redisObj = {
