@@ -6,8 +6,19 @@ const { success, failure } = require('../objects/return.objects');
 //set redis object
 const set = async (obj) => {
     try {
-        // Convert the OTP data object to a JSON string
-        const objString = JSON.stringify(obj);
+        // Check if the key already exists in Redis
+        const existingDataString = await redis.get(obj.key);
+        let dataToStore = obj;
+
+        // If key exists, merge the existing data with the new data
+        if (existingDataString) {
+            const existingData = JSON.parse(existingDataString);
+            // Merge existing data with new data, preserving existing keys not in the new object
+            dataToStore = { ...existingData, ...obj };
+        }
+
+        // Convert the merged data object to a JSON string
+        const objString = JSON.stringify(dataToStore);
 
         // Use async/await for Redis commands
         await redis.set(obj.key, objString);
