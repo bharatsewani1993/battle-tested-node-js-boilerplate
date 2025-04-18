@@ -1,6 +1,8 @@
 const sequelize = require('../config/mysql');
 const Permission = require('../models/permissionModel');
 const defaultPermissions = require('../objects/permission.objects');
+const { success, failure } = require('../objects/return.objects');
+const { catchBlockErrorHandler } = require('../utils/errorHandler');
 
 const seedDefaultPermissions = async () => {
     try {
@@ -22,10 +24,15 @@ const seedDefaultPermissions = async () => {
         }
 
         console.log('🎉 Default permissions seeding complete!');
-        process.exit(0);
-    } catch (err) {
-        console.error('❌ Failed to seed permissions:', err);
-        process.exit(1);
+
+        const successObj = success();
+        successObj.message = "Default permissions seeded successfully";
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Failed to seed default permissions";
+        return failureObj;
     }
 };
 

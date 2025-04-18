@@ -21,8 +21,7 @@ permissionModel.init({
     },
     key: {
         type: DataTypes.STRING(100),
-        allowNull: false,
-        unique: true // ensure no duplicates across system
+        allowNull: false
     },
     description: {
         type: DataTypes.STRING(500),

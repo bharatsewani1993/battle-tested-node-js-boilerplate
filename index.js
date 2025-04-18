@@ -74,11 +74,13 @@ const systemRoutes = require('./routers/systemRouter');
 const userRoutes = require('./routers/userRouter');
 const organizationRoutes = require('./routers/organizationRouter');
 const roleRoutes = require('./routers/roleRouter');
+const permissionRoutes = require('./routers/permissionRouter');
 
 //using routes
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
 app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/permissions', permissionRoutes);
 app.use('', systemRoutes);
 
 
@@ -110,8 +112,13 @@ redis.ping((err, result) => {
 
         // Start the server
         app.listen(port, async () => {
-          await startupScripts();
-          console.log(`\nServer started on port ${port}`);
+          const startupResult = await startupScripts();
+          if (!startupResult.success) {
+            console.error(`\n⚠️ Server started with startup script errors on port ${port}`);
+          } else {
+            console.log(`\n✅ Server started successfully on port ${port}`);
+          }
+
           if (ENV.CRON_ENABLED) {
             initCron();
           }
