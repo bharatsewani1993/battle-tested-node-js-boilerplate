@@ -1,4 +1,3 @@
-
 const ENV = require('../env/index').envSettings();
 const { success, failure } = require('../objects/return.objects');
 const userModel = require('../models/userModel');
@@ -9,6 +8,9 @@ const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { validateOtp } = require('../utils/otp');
 const redis = require('../config/redis');
 const { set, get } = require('../services/redisService.js');
+const roleModel = require('../models/roleModel');
+const permissionModel = require('../models/permissionModel');
+const rolePermissionModel = require('../models/rolePermissionModel');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -94,10 +96,51 @@ const getVerifyEmailOTP = async (otpObj) => {
                     }
                 }
             )
+
+            // Get organization for the user (assuming first organization)
+            const user = await userModel.findByPk(userId);
+            // Note: In a real app, you might need to handle multiple organizations
+            // or let the user select an organization after login
+
+            // For simplicity, we're assuming the first organization
+            const organizationId = 1; // Replace with proper organization retrieval logic
+
+            // Get user's role in this organization
+            const role = await roleModel.findOne({
+                where: {
+                    organizationId,
+                    createdBy: userId,
+                    active: 1
+                }
+            });
+
+            // Get permissions for this role
+            let permissions = [];
+            if (role) {
+                const rolePermissions = await rolePermissionModel.findAll({
+                    where: {
+                        roleId: role.id,
+                        active: 1
+                    },
+                    include: [{
+                        model: permissionModel,
+                        where: { active: 1 },
+                        attributes: ['key']
+                    }]
+                });
+
+                // Extract permission keys
+                if (rolePermissions && rolePermissions.length > 0) {
+                    permissions = rolePermissions.map(rp => rp.permissionModel.key);
+                }
+            }
+
             const userObj = {
                 userId: userId,
                 key: `${userId}_${email}`,
                 expiry: 7200,
+                organizationId,
+                permissions, // Store permissions in the session
             };
 
             set(userObj);

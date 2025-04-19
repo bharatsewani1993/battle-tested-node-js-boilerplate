@@ -1,18 +1,4 @@
 const defaultPermissions = [
-    // User management permissions
-    {
-        name: 'Login User',
-        key: 'login_user',
-        module: 'users',
-        description: 'Allows user to log in via email magic link',
-    },
-    {
-        name: 'Logout User',
-        key: 'logout_user',
-        module: 'users',
-        description: 'Allows user to log out',
-    },
-
     // Organization permissions
     {
         name: 'Create Organization',
