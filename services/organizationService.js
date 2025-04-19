@@ -21,7 +21,7 @@ const createOrganization = async (orgObj) => {
 
         // Create owner role for the organization
         const ownerRole = await roleModel.create({
-            name: 'Owner',
+            name: 'owner',
             description: 'Organization owner with all permissions',
             isDefault: 0,  // Not a default role, but a custom one
             organizationId: createdOrg.id,
@@ -53,6 +53,8 @@ const createOrganization = async (orgObj) => {
         const redisObj = {
             key: orgObj.key,
             organizationId: createdOrg.id,
+            roleId: ownerRole.id,
+            permissions: allPermissions.map(permission => permission.key),
             expiry: 86400 // 24 hours
         };
         await set(redisObj);

@@ -139,8 +139,6 @@ const getVerifyEmailOTP = async (otpObj) => {
                 userId: userId,
                 key: `${userId}_${email}`,
                 expiry: 7200,
-                organizationId,
-                permissions, // Store permissions in the session
             };
 
             set(userObj);
