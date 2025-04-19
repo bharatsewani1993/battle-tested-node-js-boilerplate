@@ -26,7 +26,7 @@ const requiredEnvVariables = async () => {
         }
 
         if (extraKeys.length > 0) {
-            console.log("Project specific extra env variables", extraKeys);
+            //console.log("Project specific extra env variables", extraKeys);
         }
 
         const successObj = success();

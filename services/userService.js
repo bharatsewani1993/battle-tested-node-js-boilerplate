@@ -11,6 +11,8 @@ const { set, get } = require('../services/redisService.js');
 const roleModel = require('../models/roleModel');
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
+const organizationUserModel = require('../models/organizationUserModel');
+const sequelize = require('../config/mysql');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -97,44 +99,6 @@ const getVerifyEmailOTP = async (otpObj) => {
                 }
             )
 
-            // Get organization for the user (assuming first organization)
-            const user = await userModel.findByPk(userId);
-            // Note: In a real app, you might need to handle multiple organizations
-            // or let the user select an organization after login
-
-            // For simplicity, we're assuming the first organization
-            const organizationId = 1; // Replace with proper organization retrieval logic
-
-            // Get user's role in this organization
-            const role = await roleModel.findOne({
-                where: {
-                    organizationId,
-                    createdBy: userId,
-                    active: 1
-                }
-            });
-
-            // Get permissions for this role
-            let permissions = [];
-            if (role) {
-                const rolePermissions = await rolePermissionModel.findAll({
-                    where: {
-                        roleId: role.id,
-                        active: 1
-                    },
-                    include: [{
-                        model: permissionModel,
-                        where: { active: 1 },
-                        attributes: ['key']
-                    }]
-                });
-
-                // Extract permission keys
-                if (rolePermissions && rolePermissions.length > 0) {
-                    permissions = rolePermissions.map(rp => rp.permissionModel.key);
-                }
-            }
-
             const userObj = {
                 userId: userId,
                 key: `${userId}_${email}`,
@@ -192,10 +156,79 @@ const deleteLogout = async (key) => {
     }
 };
 
+// Select organization and update Redis with permissions
+const postSelectOrganization = async (orgObj) => {
+    try {
+        const { organizationId, userId, key } = orgObj;
 
+        // Check if user belongs to the organization
+        const organizationUser = await organizationUserModel.findOne({
+            where: {
+                organizationId,
+                userId,
+                active: 1,
+                inviteStatus: 'accepted'
+            }
+        });
+
+        if (!organizationUser) {
+            const failureObj = failure();
+            failureObj.message = "You don't have access to this organization";
+            return failureObj;
+        }
+
+        // Get user's role in this organization
+        const roleId = organizationUser.roleId;
+
+        // First, get all permission IDs for this role
+        const rolePermissionsData = await rolePermissionModel.findAll({
+            where: {
+                roleId,
+                active: 1
+            },
+            attributes: ['permissionId']
+        });
+
+        // Extract permission IDs
+        const permissionIds = rolePermissionsData.map(rp => rp.permissionId);
+
+        // Now get the actual permissions
+        const permissionsData = await permissionModel.findAll({
+            where: {
+                id: permissionIds,
+                active: 1
+            },
+            attributes: ['key']
+        });
+
+        // Extract permission keys
+        const permissions = permissionsData.map(p => p.key);
+
+        // Update Redis with organization info and permissions
+        const redisObj = {
+            key,
+            organizationId,
+            roleId,
+            permissions,
+            expiry: 86400 // 24 hours
+        };
+
+        await set(redisObj);
+
+        const successObj = success();
+        successObj.message = "Organization selected successfully";
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+}
 
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
-    deleteLogout
+    deleteLogout,
+    postSelectOrganization
 }

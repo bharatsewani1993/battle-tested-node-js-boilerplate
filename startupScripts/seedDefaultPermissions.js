@@ -20,7 +20,7 @@ const seedDefaultPermissions = async () => {
                 }
             });
 
-            console.log(`${created ? 'Inserted' : 'Skipped'}: ${perm.key}`);
+            //console.log(`${created ? 'Inserted' : 'Skipped'}: ${perm.key}`);
         }
 
         console.log('🎉 Default permissions seeding complete!');

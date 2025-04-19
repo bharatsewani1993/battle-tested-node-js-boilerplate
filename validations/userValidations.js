@@ -14,8 +14,13 @@ const userIdValidation = joi.object().keys({
   userId: joi.string().required().max(999999),
 });
 
+const selectOrganizationValidation = joi.object().keys({
+  organizationId: joi.number().required().positive(),
+});
+
 module.exports = {
   emailLoginValidations,
   emailOtpValidations,
-  userIdValidation
+  userIdValidation,
+  selectOrganizationValidation
 };

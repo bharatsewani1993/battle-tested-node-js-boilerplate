@@ -9,12 +9,12 @@ const set = async (obj) => {
         const { key, expiry, ...newData } = obj;
 
         const existingDataString = await redis.get(key);
-        let dataToStore = newData;
+        let dataToStore = { key, ...newData };
 
         if (existingDataString) {
             const existingData = JSON.parse(existingDataString);
             // Merge existing and new data (preserve existing keys not in new data)
-            dataToStore = { ...existingData, ...newData };
+            dataToStore = { ...existingData, ...newData, key };
         }
 
         await redis.set(key, JSON.stringify(dataToStore));

@@ -50,10 +50,32 @@ const deleteLogout = async (req, res) => {
     }
 };
 
+// Select an organization and update permissions in Redis
+const postSelectOrganization = async (req, res) => {
+    try {
+        const { organizationId } = req.body;
+        const userId = req.redisData.userId;
+        const key = req.redisData.key;
 
+        const orgObj = {
+            organizationId,
+            userId,
+            key
+        }
+
+        const result = await userService.postSelectOrganization(orgObj);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
 
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
-    deleteLogout
+    deleteLogout,
+    postSelectOrganization
 }

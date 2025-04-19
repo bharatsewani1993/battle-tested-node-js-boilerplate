@@ -28,7 +28,6 @@ const validateAuth = async (req, res, next) => {
     const token = req.headers.authorization;
     try {
       const decoded = jwt.verify(token, ENV.JWT_SECRET_KEY);
-      console.log("Decoded token:", decoded);
       const redisObj = await get(decoded.key);
 
       if (!redisObj.success) {
@@ -62,57 +61,7 @@ const validateAuth = async (req, res, next) => {
 };
 
 
-const validateAuthAndRole = (roleArr) => async (req, res, next) => {
-  try {
-    if (!req.headers.authorization) {
-      return res.status(401).send({
-        success: false,
-        message: "Login required",
-      });
-    }
-
-    const token = req.headers.authorization;
-    try {
-      const decoded = jwt.verify(token, ENV.JWT_SECRET_KEY);
-      const redisObj = await get(decoded.key);
-      if (!redisObj.success) {
-        return res.status(401).send({
-          success: false,
-          message: "Login required",
-        });
-      }
-      if (roleArr.includes(redisObj.data.userRole)) {
-        req.redisData = redisObj.data;
-        return next();
-      } else {
-        const failureObj = failure();
-        failureObj.status = 403;
-        failureObj.message = "Make sure to select a blog before doing anything.";
-        res.status(403).send(failureObj);
-      }
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).send({
-          success: false,
-          message: "Login required",
-        });
-      } else {
-        return res.status(401).send({
-          success: false,
-          message: "Login required",
-        });
-      }
-    }
-  } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
 module.exports = {
   createAuthentication,
-  validateAuth,
-  validateAuthAndRole
+  validateAuth
 };
