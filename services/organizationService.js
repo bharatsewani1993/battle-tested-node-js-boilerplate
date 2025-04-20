@@ -73,12 +73,12 @@ const createOrganization = async (orgObj) => {
 
 const patchUpdateOrganization = async (orgObj) => {
     try {
-        const { name, description, orgId, userId } = orgObj;
+        const { name, description, organizationId, userId } = orgObj;
 
         // First check if user is the owner of the organization
         const organization = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 ownerId: userId,
                 active: 1
             }
@@ -95,7 +95,7 @@ const patchUpdateOrganization = async (orgObj) => {
             { name, description },
             {
                 where: {
-                    id: orgId,
+                    id: organizationId,
                     ownerId: userId,
                     active: 1
                 }
@@ -104,7 +104,7 @@ const patchUpdateOrganization = async (orgObj) => {
 
         const updatedOrg = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 active: 1
             }
         });

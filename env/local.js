@@ -3,7 +3,7 @@ module.exports = {
     PORT: 3000,
     DATABASE_NAME: 'node-js-boilerplate',
     DATABASE_USER: 'root',
-    DATABASE_PASSWORD: 'Qwerty@123',
+    DATABASE_PASSWORD: 'Aakash@0201',
     DATABASE_HOST: '127.0.0.1',
     LOGGING: false,
     DIALECT: 'mysql',

@@ -29,13 +29,13 @@ const patchUpdateOrganization = async (req, res, next) => {
     try {
 
         const { name, description } = req.body;
-        const orgId = req.redisData.orgId;
+        const organizationId = req.redisData.organizationId;
         const userId = req.redisData.userId;
 
         const orgObj = {
             name,
             description,
-            orgId,
+            organizationId,
             userId
         };
 
