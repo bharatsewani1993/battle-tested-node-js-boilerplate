@@ -31,7 +31,6 @@ const patchUpdateOrganization = async (req, res, next) => {
         const { name, description } = req.body;
         const organizationId = req.redisData.organizationId;
         const userId = req.redisData.userId;
-        console.log('orgId',organizationId);
 
         const orgObj = {
             name,
