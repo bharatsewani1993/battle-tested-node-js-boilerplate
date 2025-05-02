@@ -19,9 +19,14 @@ const inviteMemberValidations = joi.object().keys({
     roleId: joi.number().required().positive(),
 });
 
+const getOrganizationByIdValidations = joi.object().keys({
+    organizationId: joi.number().required().positive(),
+});
+
 module.exports = {
     createOrganizationValidations,
     updateOrganizationValidations,
     deleteOrganizationValidations,
-    inviteMemberValidations
+    inviteMemberValidations,
+    getOrganizationByIdValidations
 }; 

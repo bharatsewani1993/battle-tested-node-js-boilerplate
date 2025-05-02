@@ -302,9 +302,82 @@ const inviteMember = async (inviteObj) => {
     }
 };
 
+const getCurrentOrganization = async (redisData) => {
+    try {
+        const organizationId = redisData.organizationId;
+
+
+        // Check if organization is selected
+        if (!organizationId) {
+            const failureObj = failure();
+            failureObj.status = 400;
+            failureObj.message = "No organization is currently selected";
+            return failureObj;
+        }
+
+        // Get organization details
+        const organization = await organizationModel.findOne({
+            where: {
+                id: organizationId,
+                active: 1
+            },
+            attributes: ['id', 'name', 'description', 'ownerId', 'createdAt', 'updatedAt']
+        });
+
+        if (!organization) {
+            const failureObj = failure();
+            failureObj.message = "Organization not found";
+            return failureObj;
+        }
+
+        // Get the owner details
+        const owner = await userModel.findOne({
+            where: {
+                id: organization.ownerId,
+                active: 1
+            },
+            attributes: ['id', 'name', 'email']
+        });
+
+        // Get member count for the organization
+        const memberCount = await organizationUserModel.count({
+            where: {
+                organizationId: organizationId,
+                active: 1,
+                inviteStatus: 'accepted'
+            }
+        });
+
+        const orgDetails = {
+            id: organization.id,
+            name: organization.name,
+            description: organization.description,
+            owner: owner ? {
+                id: owner.id,
+                name: owner.name,
+                email: owner.email
+            } : null,
+            memberCount,
+            createdAt: organization.createdAt,
+            updatedAt: organization.updatedAt
+        };
+
+        const successObj = success();
+        successObj.data.push(orgDetails);
+        successObj.message = "Organization details retrieved successfully";
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+};
+
 module.exports = {
     createOrganization,
     patchUpdateOrganization,
     deleteOrganization,
-    inviteMember
+    inviteMember,
+    getCurrentOrganization
 }; 

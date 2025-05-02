@@ -87,9 +87,23 @@ const postInviteMember = async (req, res, next) => {
     }
 };
 
+
+const getCurrentOrganization = async (req, res, next) => {
+    try {
+        const result = await organizationService.getCurrentOrganization(req.redisData);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postCreateOrganization,
     patchUpdateOrganization,
     deleteOrganization,
-    postInviteMember
+    postInviteMember,
+    getCurrentOrganization
 }; 
