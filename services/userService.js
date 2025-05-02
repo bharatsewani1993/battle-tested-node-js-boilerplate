@@ -331,11 +331,84 @@ const acceptInvitation = async (inviteObj) => {
     }
 }
 
+// Get all organizations for a user
+const getUserOrganizations = async (userId) => {
+    try {
+        // Find all organization-user relationships for this user
+        const organizationUsers = await organizationUserModel.findAll({
+            where: {
+                userId,
+                active: 1,
+                inviteStatus: 'accepted'
+            }
+        });
+
+        if (!organizationUsers || organizationUsers.length === 0) {
+            const successObj = success();
+            successObj.message = "No organizations found";
+            successObj.data = [];
+            return successObj;
+        }
+
+        // Extract organization IDs
+        const organizationIds = organizationUsers.map(ou => ou.organizationId);
+
+        // Get organization details
+        const organizations = await organizationModel.findAll({
+            where: {
+                id: organizationIds,
+                active: 1
+            },
+            attributes: ['id', 'name', 'description', 'ownerId', 'createdAt']
+        });
+
+        // Get user roles in each organization
+        const orgDetails = await Promise.all(organizations.map(async (org) => {
+            // Find user's role in this organization
+            const orgUser = organizationUsers.find(ou => ou.organizationId === org.id);
+
+            // Get role details
+            const role = await roleModel.findOne({
+                where: {
+                    id: orgUser.roleId,
+                    active: 1
+                },
+                attributes: ['id', 'name']
+            });
+
+            // Check if user is the owner
+            const isOwner = org.ownerId === userId;
+
+            return {
+                id: org.id,
+                name: org.name,
+                description: org.description,
+                isOwner,
+                role: role ? {
+                    id: role.id,
+                    name: role.name
+                } : null,
+                createdAt: org.createdAt
+            };
+        }));
+
+        const successObj = success();
+        successObj.data = orgDetails;
+        successObj.message = "Organizations retrieved successfully";
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+}
 
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
-    acceptInvitation
+    acceptInvitation,
+    getUserOrganizations
 }

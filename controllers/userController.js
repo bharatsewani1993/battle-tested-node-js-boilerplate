@@ -93,10 +93,26 @@ const getAcceptInvitation = async (req, res) => {
     }
 };
 
+// Get all organizations for the current logged-in user
+const getUserOrganizations = async (req, res) => {
+    try {
+        const userId = req.redisData.userId;
+
+        const result = await userService.getUserOrganizations(userId);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
-    getAcceptInvitation
+    getAcceptInvitation,
+    getUserOrganizations
 }
