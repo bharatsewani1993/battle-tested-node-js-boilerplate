@@ -73,9 +73,31 @@ const postSelectOrganization = async (req, res) => {
     }
 };
 
+// Accept an invitation to join an organization
+const getAcceptInvitation = async (req, res) => {
+    try {
+        const { organizationId, email, roleId } = req.query;
+
+        const inviteObj = {
+            organizationId: parseInt(organizationId),
+            email,
+            roleId: parseInt(roleId)
+        };
+
+        const result = await userService.acceptInvitation(inviteObj);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
-    postSelectOrganization
+    postSelectOrganization,
+    getAcceptInvitation
 }

@@ -259,12 +259,25 @@ const inviteMember = async (inviteObj) => {
 
         // Send invitation email
         if (ENV.STAGE !== 'LOCAL') {
-            const inviteLink = `${ENV.FRONTEND_URL}/accept-invite?organizationId=${organizationId}&email=${email}`;
+            const inviteLink = `${ENV.FRONTEND_URL}/accept-invite?organizationId=${organizationId}&email=${email}&roleId=${roleId}`;
+
+            let emailSubject, emailMessage;
+            if (!user) {
+                // New user
+                emailSubject = `Invitation to join ${organization.name} on ${ENV.PROJECT_NAME}`;
+                emailMessage = `You've been invited to join ${organization.name} with the role of ${role.name}. 
+                                Clicking the invitation link will verify your email and create your account.`;
+            } else {
+                // Existing user
+                emailSubject = `Invitation to join ${organization.name} on ${ENV.PROJECT_NAME}`;
+                emailMessage = `You've been invited to join ${organization.name} with the role of ${role.name}. 
+                                After accepting this invitation, you'll be able to access this organization.`;
+            }
 
             const emailObj = {
                 to: email,
-                subject: `Invitation to join ${organization.name} on ${ENV.PROJECT_NAME}`,
-                html: emailTemplates.organizationInviteTemplate(organization.name, inviteLink),
+                subject: emailSubject,
+                html: emailTemplates.organizationInviteTemplate(organization.name, inviteLink, role.name, emailMessage),
             };
 
             emailService.sendEmail(emailObj);
@@ -272,6 +285,14 @@ const inviteMember = async (inviteObj) => {
 
         const successObj = success();
         successObj.message = "Invitation sent successfully";
+        // Add useful info to the response
+        successObj.data.push({
+            email,
+            organizationId,
+            organizationName: organization.name,
+            roleName: role.name,
+            userStatus: !user ? "New user (will be verified on acceptance)" : "Existing user"
+        });
         return successObj;
     } catch (error) {
         catchBlockErrorHandler(error);

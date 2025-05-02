@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { validateAuth } = require('../middlewares/auth');
-const { postEmailMagicLink, getVerifyEmailOTP, deleteLogout, postSelectOrganization } = require('../controllers/userController');
+const { postEmailMagicLink, getVerifyEmailOTP, deleteLogout, postSelectOrganization, getAcceptInvitation } = require('../controllers/userController');
 const validate = require('../middlewares/validate');
-const { emailLoginValidations, emailOtpValidations, selectOrganizationValidation } = require('../validations/userValidations');
+const { emailLoginValidations, emailOtpValidations, selectOrganizationValidation, acceptInvitationValidation } = require('../validations/userValidations');
 
 //for signup,sign-in we have single api.
 router.post('/email/magic-link', validate(emailLoginValidations), postEmailMagicLink);
@@ -14,5 +14,8 @@ router.delete("/logout", validateAuth, deleteLogout);
 
 // Route to select an organization and update permissions in Redis
 router.post("/select-organization", validateAuth, validate(selectOrganizationValidation), postSelectOrganization);
+
+// Route to accept an invitation to join an organization (GET endpoint - no auth required)
+router.get("/accept-invitation", validate(acceptInvitationValidation), getAcceptInvitation);
 
 module.exports = router;
