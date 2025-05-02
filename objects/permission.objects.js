@@ -38,7 +38,6 @@ const defaultPermissions = [
         module: 'organization_users',
         description: 'Allows user to change the role of organization members',
     },
-
     // Role permissions
     {
         name: 'View Roles',

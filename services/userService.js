@@ -8,11 +8,9 @@ const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { validateOtp } = require('../utils/otp');
 const redis = require('../config/redis');
 const { set, get } = require('../services/redisService.js');
-const roleModel = require('../models/roleModel');
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
 const organizationUserModel = require('../models/organizationUserModel');
-const sequelize = require('../config/mysql');
 
 const postEmailMagicLink = async (email) => {
     try {
