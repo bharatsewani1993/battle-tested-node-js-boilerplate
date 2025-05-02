@@ -229,7 +229,7 @@ const postSelectOrganization = async (orgObj) => {
 // Accept an invitation to join an organization
 const acceptInvitation = async (inviteObj) => {
     try {
-        const { organizationId, email, roleId } = inviteObj;
+        const { organizationId, email } = inviteObj;
 
         // Find the user by email
         const user = await userModel.findOne({
@@ -239,27 +239,23 @@ const acceptInvitation = async (inviteObj) => {
             }
         });
 
-        // If user doesn't exist, return error - don't create account automatically
-        // This could be a sign of tampering with the invitation
         if (!user) {
             const failureObj = failure();
             failureObj.message = "No user found with this email. Please make sure you're using the same email that received the invitation.";
             return failureObj;
         }
 
-        // If user exists but isn't verified, verify them now since they've clicked the email link
+        // Verify user if not already verified
         if (user.verified === 0) {
             await userModel.update(
                 { verified: 1 },
                 {
-                    where: {
-                        id: user.id
-                    }
+                    where: { id: user.id }
                 }
             );
         }
 
-        // Find the organization
+        // Validate organization
         const organization = await organizationModel.findOne({
             where: {
                 id: organizationId,
@@ -273,10 +269,26 @@ const acceptInvitation = async (inviteObj) => {
             return failureObj;
         }
 
-        // Verify that the role exists and belongs to the organization
+        // Get the invitation and ensure it's pending
+        const invitation = await organizationUserModel.findOne({
+            where: {
+                organizationId,
+                userId: user.id,
+                active: 1,
+                inviteStatus: 'pending'
+            }
+        });
+
+        if (!invitation) {
+            const failureObj = failure();
+            failureObj.message = "No pending invitation found for this email and organization. Please contact the organization admin.";
+            return failureObj;
+        }
+
+        // Use the roleId from the invitation (NOT from user input)
         const role = await roleModel.findOne({
             where: {
-                id: roleId,
+                id: invitation.roleId,
                 organizationId,
                 active: 1
             }
@@ -284,37 +296,14 @@ const acceptInvitation = async (inviteObj) => {
 
         if (!role) {
             const failureObj = failure();
-            failureObj.message = "Invalid role for this organization";
+            failureObj.message = "Assigned role in invitation is no longer valid";
             return failureObj;
         }
 
-        // Check if there is a pending invitation for this email and organization
-        const invitation = await organizationUserModel.findOne({
-            where: {
-                organizationId,
-                userId: user.id,
-                active: 1
-            }
-        });
-
-        // If no invitation exists, this could be a tampered link
-        if (!invitation) {
-            const failureObj = failure();
-            failureObj.message = "No invitation found for this email and organization. Please contact the organization admin.";
-            return failureObj;
-        }
-
-        if (invitation.inviteStatus === 'accepted') {
-            const failureObj = failure();
-            failureObj.message = "Invitation already accepted";
-            return failureObj;
-        }
-
-        // Update invitation status to accepted and update roleId if different
+        // Mark invitation as accepted
         await organizationUserModel.update(
             {
-                inviteStatus: 'accepted',
-                roleId: roleId
+                inviteStatus: 'accepted'
             },
             {
                 where: {
@@ -323,43 +312,14 @@ const acceptInvitation = async (inviteObj) => {
             }
         );
 
-        // Get permissions for this role
-        const rolePermissionsData = await rolePermissionModel.findAll({
-            where: {
-                roleId,
-                active: 1
-            },
-            attributes: ['permissionId']
-        });
-
-        // Extract permission IDs
-        const permissionIds = rolePermissionsData.map(rp => rp.permissionId);
-
-        // Get the actual permissions
-        const permissionsData = await permissionModel.findAll({
-            where: {
-                id: permissionIds,
-                active: 1
-            },
-            attributes: ['key']
-        });
-
-        // Extract permission keys
-        const permissions = permissionsData.map(p => p.key);
-
         const successObj = success();
-
-        // Since we've verified the email, we can give a simple, consistent message
         successObj.message = "Invitation accepted successfully. You can now log in and access this organization.";
-
-        // Add additional information to response
         successObj.data.push({
             organizationId,
             organizationName: organization.name,
             roleName: role.name,
             email: user.email,
-            verified: true, // Always true now since we verify as part of accepting the invitation
-            permissions: permissions.length
+            verified: true
         });
 
         return successObj;
@@ -370,6 +330,7 @@ const acceptInvitation = async (inviteObj) => {
         return failureObj;
     }
 }
+
 
 module.exports = {
     postEmailMagicLink,

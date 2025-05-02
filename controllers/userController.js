@@ -76,12 +76,11 @@ const postSelectOrganization = async (req, res) => {
 // Accept an invitation to join an organization
 const getAcceptInvitation = async (req, res) => {
     try {
-        const { organizationId, email, roleId } = req.query;
+        const { organizationId, email } = req.query;
 
         const inviteObj = {
             organizationId: parseInt(organizationId),
-            email,
-            roleId: parseInt(roleId)
+            email
         };
 
         const result = await userService.acceptInvitation(inviteObj);

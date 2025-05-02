@@ -259,7 +259,7 @@ const inviteMember = async (inviteObj) => {
 
         // Send invitation email
         if (ENV.STAGE !== 'LOCAL') {
-            const inviteLink = `${ENV.FRONTEND_URL}/accept-invite?organizationId=${organizationId}&email=${email}&roleId=${roleId}`;
+            const inviteLink = `${ENV.FRONTEND_URL}/accept-invite?organizationId=${organizationId}&email=${email}`;
 
             let emailSubject, emailMessage;
             if (!user) {
