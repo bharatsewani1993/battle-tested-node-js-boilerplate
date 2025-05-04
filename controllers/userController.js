@@ -108,11 +108,39 @@ const getUserOrganizations = async (req, res) => {
     }
 };
 
+// Get all users of the current organization with pagination, sorting, and search
+const getOrganizationUsers = async (req, res) => {
+    try {
+        const { organizationId } = req.redisData;
+
+        // Extract query parameters with defaults from validation
+        const { page, limit, search, sortBy, sortOrder } = req.query;
+
+        const queryObj = {
+            organizationId,
+            page,
+            limit,
+            search,
+            sortBy,
+            sortOrder
+        };
+
+        const result = await userService.getOrganizationUsers(queryObj);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
     getAcceptInvitation,
-    getUserOrganizations
+    getUserOrganizations,
+    getOrganizationUsers
 }
