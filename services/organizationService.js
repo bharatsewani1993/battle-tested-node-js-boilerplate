@@ -2,9 +2,11 @@ const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
 const organizationUserModel = require('../models/organizationUserModel.js');
 const roleModel = require('../models/roleModel');
+const userModel=require('../models/userModel')
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
+const ENV = require('../env/index').envSettings();
 const { set } = require('./redisService.js');
 
 const createOrganization = async (orgObj) => {
@@ -162,8 +164,219 @@ const deleteOrganization = async (organizationId, userId) => {
     }
 };
 
+const postInviteMember = async (inviteObj) => {
+    try {
+        const { email, roleId, organizationId, invitedBy } = inviteObj;
+
+        // Check if the role belongs to the organization
+        const role = await roleModel.findOne({
+            where: {
+                id: roleId,
+                organizationId:organizationId,
+                active: 1
+            }
+        });
+
+        if (!role) {
+            const failureObj = failure();
+            failureObj.message = "Invalid role selected for this organization";
+            return failureObj;
+        }
+
+        // Check if the organization exists
+        const organization = await organizationModel.findOne({
+            where: {
+                id: organizationId,
+                active: 1
+            }
+        });
+
+        if (!organization) {
+            const failureObj = failure();
+            failureObj.message = "Organization not found";
+            return failureObj;
+        }
+
+        // Check if user exists, if not create one
+        let user = await userModel.findOne({
+            where: {
+                email:email,
+                active: 1
+            }
+        });
+
+        let userId;
+        if (!user) {
+            // Create a new user
+            const newUser = await userModel.create({
+                emal:email,
+                verified: 0,
+                active: 1
+            });
+            userId = newUser.id;
+        } else {
+            userId = user.id;
+        }
+
+        // Check if user is already a member of the organization
+        const existingMember = await organizationUserModel.findOne({
+            where: {
+                organizationId:organizationId,
+                userId:userId,
+                active: 1
+            }
+        });
+
+        if (existingMember) {
+            if (existingMember.inviteStatus === 'accepted') {
+                const failureObj = failure();
+                failureObj.message = "User is already a member of this organization";
+                return failureObj;
+            } else {
+                // Update the existing invitation with new role
+                await organizationUserModel.update(
+                    {
+                        roleId,
+                        invitedBy
+                    },
+                    {
+                        where: {
+                            id: existingMember.id
+                        }
+                    }
+                );
+            }
+        } else {
+            // Create new invitation
+            await organizationUserModel.create({
+                organizationId:organizationId,
+                userId:userId,
+                roleId:roleId,
+                inviteStatus: 'pending',
+                invitedBy
+            });
+        }
+
+        // Send invitation email
+        if (ENV.STAGE !== 'LOCAL') {
+            const inviteLink = `${ENV.FRONTEND_URL}/accept-invite?organizationId=${organizationId}&email=${email}`;
+
+            let emailSubject, emailMessage;
+            if (!user) {
+                // New user
+                emailSubject = `Invitation to join ${organization.name} on ${ENV.PROJECT_NAME}`;
+                emailMessage = `You've been invited to join ${organization.name} with the role of ${role.name}. 
+                                Clicking the invitation link will verify your email and create your account.`;
+            } else {
+                // Existing user
+                emailSubject = `Invitation to join ${organization.name} on ${ENV.PROJECT_NAME}`;
+                emailMessage = `You've been invited to join ${organization.name} with the role of ${role.name}. 
+                                After accepting this invitation, you'll be able to access this organization.`;
+            }
+
+            const emailObj = {
+                to: email,
+                subject: emailSubject,
+                html: emailTemplates.organizationInviteTemplate(organization.name, inviteLink, role.name, emailMessage),
+            };
+
+            emailService.sendEmail(emailObj);
+        }
+
+        const successObj = success();
+        successObj.message = "Invitation sent successfully";
+        // Add useful info to the response
+        successObj.data.push({
+            email,
+            organizationId,
+            organizationName: organization.name,
+            roleName: role.name,
+            userStatus: !user ? "New user (will be verified on acceptance)" : "Existing user"
+        });
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+};
+
+const getCurrentOrganization = async (redisData) => {
+    try {
+        const organizationId = redisData.organizationId;
+
+        // Check if organization is selected
+        if (!organizationId) {
+            const failureObj = failure();
+            failureObj.status = 400;
+            failureObj.message = "No organization is currently selected";
+            return failureObj;
+        }
+
+        // Get organization details
+        const organization = await organizationModel.findOne({
+            where: {
+                id: organizationId,
+                active: 1
+            },
+            attributes: ['id', 'name', 'description', 'ownerId', 'createdAt', 'updatedAt']
+        });
+
+        if (!organization) {
+            const failureObj = failure();
+            failureObj.message = "Organization not found";
+            return failureObj;
+        }
+
+        // Get the owner details
+        const owner = await userModel.findOne({
+            where: {
+                id: organization.ownerId,
+                active: 1
+            },
+            attributes: ['id', 'name', 'email']
+        });
+
+        // Get member count for the organization
+        const memberCount = await organizationUserModel.count({
+            where: {
+                organizationId: organizationId,
+                active: 1,
+                inviteStatus: 'accepted'
+            }
+        });
+
+        const orgDetails = {
+            id: organization.id,
+            name: organization.name,
+            description: organization.description,
+            owner: owner ? {
+                id: owner.id,
+                name: owner.name,
+                email: owner.email
+            } : null,
+            memberCount,
+            createdAt: organization.createdAt,
+            updatedAt: organization.updatedAt
+        };
+
+        const successObj = success();
+        successObj.data.push(orgDetails);
+        successObj.message = "Organization details retrieved successfully";
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+};
+
 module.exports = {
     createOrganization,
     patchUpdateOrganization,
-    deleteOrganization
+    deleteOrganization,
+    postInviteMember,
+    getCurrentOrganization
 }; 

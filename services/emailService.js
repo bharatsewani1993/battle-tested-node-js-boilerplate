@@ -6,7 +6,6 @@ const { success, failure } = require('../objects/return.objects');
 
 const sendEmail = async (emailObj) => {
     try {
-
         const msg = {
             to: emailObj.to,
             subject: emailObj.subject,

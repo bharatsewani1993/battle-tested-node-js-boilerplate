@@ -16,10 +16,19 @@ const deleteOrganizationValidations = joi.object().keys({
     organizationId: joi.number().required(),
 });
 
+const inviteMemberValidations = joi.object().keys({
+    email: joi.string().email().required().max(500),
+    roleId: joi.number().required().positive(),
+});
 
+const getOrganizationByIdValidations = joi.object().keys({
+    organizationId: joi.number().required().positive(),
+});
 
 module.exports = {
     createOrganizationValidations,
     updateOrganizationValidations,
     deleteOrganizationValidations,
+    inviteMemberValidations,
+    getOrganizationByIdValidations
 }; 

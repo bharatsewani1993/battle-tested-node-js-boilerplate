@@ -65,8 +65,46 @@ const deleteOrganization = async (req, res, next) => {
     }
 };
 
+const postInviteMember = async (req, res, next) => {
+    try {
+        const { email, roleId } = req.body;
+        const organizationId = req.redisData.organizationId;
+        const userId = req.redisData.userId;
+
+        const inviteObj = {
+            email,
+            roleId,
+            organizationId,
+            invitedBy: userId
+        };
+
+        const result = await organizationService.postInviteMember(inviteObj);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
+
+const getCurrentOrganization = async (req, res, next) => {
+    try {
+        const result = await organizationService.getCurrentOrganization(req.redisData);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postCreateOrganization,
     patchUpdateOrganization,
-    deleteOrganization
+    deleteOrganization,
+    postInviteMember,
+    getCurrentOrganization
 }; 
