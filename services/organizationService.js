@@ -302,9 +302,8 @@ const postInviteMember = async (inviteObj) => {
     }
 };
 
-const getCurrentOrganization = async (redisData) => {
+const getCurrentOrganization = async (organizationId) => {
     try {
-        const organizationId = redisData.organizationId;
 
         // Check if organization is selected
         if (!organizationId) {

@@ -91,7 +91,9 @@ const postInviteMember = async (req, res, next) => {
 
 const getCurrentOrganization = async (req, res, next) => {
     try {
-        const result = await organizationService.getCurrentOrganization(req.redisData);
+        const organizationId=req.redisData.organizationId
+
+        const result = await organizationService.getCurrentOrganization(organizationId);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
