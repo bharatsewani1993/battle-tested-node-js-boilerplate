@@ -14,6 +14,7 @@ const rolePermissionModel = require('../models/rolePermissionModel');
 const organizationUserModel = require('../models/organizationUserModel');
 const organizationModel=require('../models/organizationModel.js')
 const sequelize = require('../config/mysql');
+const { getAcceptInvitation } = require('../controllers/userController.js');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -227,6 +228,111 @@ const postSelectOrganization = async (orgObj) => {
     }
 }
 
+// Accept an invitation to join an organization
+const acceptInvitation = async (inviteObj) => {
+    try {
+        const { organizationId, email } = inviteObj;
+
+        // Find the user by email
+        const user = await userModel.findOne({
+            where: {
+                email,
+                active: 1
+            }
+        });
+
+        if (!user) {
+            const failureObj = failure();
+            failureObj.message = "No user found with this email. Please make sure you're using the same email that received the invitation.";
+            return failureObj;
+        }
+
+        // Verify user if not already verified
+        if (user.verified === 0) {
+            await userModel.update(
+                { verified: 1 },
+                {
+                    where: { id: user.id }
+                }
+            );
+        }
+
+        // Validate organization
+        const organization = await organizationModel.findOne({
+            where: {
+                id: organizationId,
+                active: 1
+            }
+        });
+
+        if (!organization) {
+            const failureObj = failure();
+            failureObj.message = "Organization not found";
+            return failureObj;
+        }
+
+        // Get the invitation and ensure it's pending
+        const invitation = await organizationUserModel.findOne({
+            where: {
+                organizationId,
+                userId: user.id,
+                active: 1,
+                inviteStatus: 'pending'
+            }
+        });
+
+        if (!invitation) {
+            const failureObj = failure();
+            failureObj.message = "No pending invitation found for this email and organization. Please contact the organization admin.";
+            return failureObj;
+        }
+
+        // Use the roleId from the invitation (NOT from user input)
+        const role = await roleModel.findOne({
+            where: {
+                id: invitation.roleId,
+                organizationId,
+                active: 1
+            }
+        });
+
+        if (!role) {
+            const failureObj = failure();
+            failureObj.message = "Assigned role in invitation is no longer valid";
+            return failureObj;
+        }
+
+        // Mark invitation as accepted
+        await organizationUserModel.update(
+            {
+                inviteStatus: 'accepted'
+            },
+            {
+                where: {
+                    id: invitation.id
+                }
+            }
+        );
+
+        const successObj = success();
+        successObj.message = "Invitation accepted successfully. You can now log in and access this organization.";
+        successObj.data.push({
+            organizationId,
+            organizationName: organization.name,
+            roleName: role.name,
+            email: user.email,
+            verified: true
+        });
+
+        return successObj;
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = error.message;
+        return failureObj;
+    }
+}
+
 // Get all organizations for a user
 const getUserOrganizations = async (userId,options) => {
     try {
@@ -234,7 +340,7 @@ const getUserOrganizations = async (userId,options) => {
         // Find all organization-user relationships for this user
         const organizationUsers = await organizationUserModel.findAll({
             where: {
-                userId,
+                userId:userId,
                 active: 1,
                 inviteStatus: 'accepted'
             }
@@ -451,6 +557,7 @@ module.exports = {
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
+    getAcceptInvitation,
     getUserOrganizations,
     getOrganizationUsers
 }

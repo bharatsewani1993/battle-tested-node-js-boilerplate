@@ -18,6 +18,12 @@ const selectOrganizationValidation = joi.object().keys({
   organizationId: joi.number().required().positive(),
 });
 
+const acceptInvitationValidation = joi.object().keys({
+  organizationId: joi.number().required().positive(),
+  email: joi.string().email().required().max(500),
+  roleId: joi.number().required().positive(),
+});
+
 const organizationUsersValidation = joi.object().keys({
   page: joi.number().integer().min(1).default(1),
   limit: joi.number().integer().min(1).max(100).default(10),
@@ -31,5 +37,6 @@ module.exports = {
   emailOtpValidations,
   userIdValidation,
   selectOrganizationValidation,
+  acceptInvitationValidation,
   organizationUsersValidation
 };
