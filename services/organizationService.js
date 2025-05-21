@@ -13,7 +13,8 @@ const createOrganization = async (orgObj) => {
         const insertObj = {
             name: orgObj.name,
             description: orgObj.description,
-            ownerId: orgObj.ownerId
+            ownerId: orgObj.ownerId,
+            status:'DRAFT'
         };
 
         // Create organization in database
@@ -73,12 +74,12 @@ const createOrganization = async (orgObj) => {
 
 const patchUpdateOrganization = async (orgObj) => {
     try {
-        const { name, description, orgId, userId } = orgObj;
+        const { name, description,status, organizationId, userId } = orgObj;
 
         // First check if user is the owner of the organization
         const organization = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 ownerId: userId,
                 active: 1
             }
@@ -92,10 +93,10 @@ const patchUpdateOrganization = async (orgObj) => {
 
         // Update organization
         await organizationModel.update(
-            { name, description },
+            { name, description,status },
             {
                 where: {
-                    id: orgId,
+                    id: organizationId,
                     ownerId: userId,
                     active: 1
                 }
@@ -104,7 +105,7 @@ const patchUpdateOrganization = async (orgObj) => {
 
         const updatedOrg = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 active: 1
             }
         });
@@ -121,12 +122,12 @@ const patchUpdateOrganization = async (orgObj) => {
     }
 };
 
-const deleteOrganization = async (orgId, userId) => {
+const deleteOrganization = async (organizationId, userId) => {
     try {
         // First check if user is the owner of the organization
         const organization = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 ownerId: userId,
                 active: 1
             }
@@ -143,8 +144,9 @@ const deleteOrganization = async (orgId, userId) => {
             { active: 0 },
             {
                 where: {
-                    id: orgId,
-                    ownerId: userId
+                    id: organizationId,
+                    ownerId: userId,
+                    active:1
                 }
             }
         );

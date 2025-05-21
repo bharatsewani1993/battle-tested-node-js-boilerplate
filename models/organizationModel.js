@@ -32,6 +32,10 @@ organizationModel.init({
             key: 'id'
         }
     },
+    status:{
+        type:DataTypes.ENUM('DRAFT','PUBLISHED','ARCHIVED'),
+        defaultValue:'DRAFT'
+    },
     active: {
         type: DataTypes.INTEGER(1),
         allowNull: false,

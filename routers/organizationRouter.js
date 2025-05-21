@@ -10,9 +10,9 @@ const { createOrganizationValidations, updateOrganizationValidations, deleteOrga
 router.post('/', validateAuth, validate(createOrganizationValidations), postCreateOrganization);
 
 // Update organization
-router.patch('/', validateAuth, hasPermission('update_organization'), validate(updateOrganizationValidations), patchUpdateOrganization);
+router.patch('/', validateAuth, validate(updateOrganizationValidations), patchUpdateOrganization);
 
 // Delete organization
-router.delete('/:orgId', validateAuth, hasPermission('delete_organization'), validate(deleteOrganizationValidations), deleteOrganization);
+router.delete('/:organizationId', validateAuth, hasPermission('delete_organization'), validate(deleteOrganizationValidations), deleteOrganization);
 
 module.exports = router; 

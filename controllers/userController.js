@@ -73,9 +73,61 @@ const postSelectOrganization = async (req, res) => {
     }
 };
 
+// Get all organizations for the current logged-in user
+const getUserOrganizations = async (req, res) => {
+    try {
+        const userId = req.redisData.userId;
+
+        const options={
+            limit:parseInt(req.query.limit) || 10,
+            page:parseInt(req.query.page) || 1,
+            sortBy:req.query.sortBy || 'createdAt',
+            sortOrder:req.query.sortOrder || 'DESC',
+            status:req.query.status
+        }
+
+        const result = await userService.getUserOrganizations(userId,options);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
+// Get all users of the current organization with pagination, sorting, and search
+const getOrganizationUsers = async (req, res) => {
+    try {
+        const { organizationId } = req.redisData;
+
+        // Extract query parameters with defaults from validation
+        const { page, limit, search, sortBy, sortOrder } = req.query;
+
+        const queryObj = {
+            organizationId,
+            page,
+            limit,
+            search,
+            sortBy,
+            sortOrder
+        };
+
+        const result = await userService.getOrganizationUsers(queryObj);
+        return res.status(result.status).send(result);
+    } catch (error) {
+        catchBlockErrorHandler(error);
+        const failureObj = failure();
+        failureObj.message = "Something went wrong at server side!";
+        return res.status(500).send(failureObj);
+    }
+};
+
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
-    postSelectOrganization
+    postSelectOrganization,
+    getUserOrganizations,
+    getOrganizationUsers
 }
