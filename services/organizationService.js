@@ -2,12 +2,14 @@ const { success, failure } = require('../objects/return.objects');
 const organizationModel = require('../models/organizationModel');
 const organizationUserModel = require('../models/organizationUserModel.js');
 const roleModel = require('../models/roleModel');
-const userModel=require('../models/userModel')
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
+const userModel = require('../models/userModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
-const ENV = require('../env/index').envSettings();
 const { set } = require('./redisService.js');
+const emailService = require('./emailService');
+const ENV = require('../env/index').envSettings();
+const emailTemplates = require('../templates/email');
 
 const createOrganization = async (orgObj) => {
     try {
@@ -304,7 +306,6 @@ const postInviteMember = async (inviteObj) => {
 
 const getCurrentOrganization = async (organizationId) => {
     try {
-
         // Check if organization is selected
         if (!organizationId) {
             const failureObj = failure();

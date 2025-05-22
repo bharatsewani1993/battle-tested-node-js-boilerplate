@@ -8,12 +8,12 @@ const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { validateOtp } = require('../utils/otp');
 const redis = require('../config/redis');
 const { set, get } = require('../services/redisService.js');
-const roleModel = require('../models/roleModel');
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
 const organizationUserModel = require('../models/organizationUserModel');
 const organizationModel=require('../models/organizationModel.js')
 const sequelize = require('../config/mysql');
+const roleModel = require('../models/roleModel');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -235,7 +235,7 @@ const getAcceptInvitation= async (inviteObj) => {
         // Find the user by email
         const user = await userModel.findOne({
             where: {
-                email,
+                email:email,
                 active: 1
             }
         });

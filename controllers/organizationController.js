@@ -103,6 +103,7 @@ const getCurrentOrganization = async (req, res, next) => {
     }
 };
 
+
 module.exports = {
     postCreateOrganization,
     patchUpdateOrganization,

@@ -6,8 +6,8 @@ const validate = (schema) => (req, res, next) => {
     // From where to get the data
     const body = getBody(req);
 
-    // Validate the data
-    const { error, value } = schema.validate(body);
+    // Validate the data with abortEarly: false to collect all errors
+    const { error, value } = schema.validate(body, { abortEarly: false });
 
     if (error) {
       const errorArr = error.details.map(detail => ({ [detail.path[0]]: detail.message }));

@@ -21,4 +21,11 @@ router.post('/invite', validateAuth, hasPermission('invite_organization_user'), 
 // Get current organization details
 router.get('/current/details', validateAuth, getCurrentOrganization);
 
+// Invite member to organization
+router.post('/invite', validateAuth, hasPermission('invite_organization_user'), validate(inviteMemberValidations), postInviteMember);
+
+// Get current organization details
+router.get('/current/details', validateAuth, getCurrentOrganization);
+
+
 module.exports = router; 
