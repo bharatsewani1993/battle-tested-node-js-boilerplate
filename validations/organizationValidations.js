@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const joi = require("joi");
 
 const createOrganizationValidations = joi.object().keys({
@@ -7,17 +8,19 @@ const createOrganizationValidations = joi.object().keys({
 
 const updateOrganizationValidations = joi.object().keys({
     name: joi.string().optional().max(500),
-    description: joi.string().optional().allow('').max(1000),
+    description: joi.string().optional().max(1000),
+    status:Joi.string().valid('DRAFT','PUBLISHED','ARCHIVED')
 });
 
 const deleteOrganizationValidations = joi.object().keys({
-    orgId: joi.number().required(),
+    organizationId: joi.number().required(),
 });
 
 const inviteMemberValidations = joi.object().keys({
     email: joi.string().email().required().max(500),
     roleId: joi.number().required().positive(),
 });
+
 
 const getOrganizationByIdValidations = joi.object().keys({
     organizationId: joi.number().required().positive(),

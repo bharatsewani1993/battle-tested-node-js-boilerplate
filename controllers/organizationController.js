@@ -28,15 +28,16 @@ const postCreateOrganization = async (req, res, next) => {
 const patchUpdateOrganization = async (req, res, next) => {
     try {
 
-        const { name, description } = req.body;
+        const { name, description,status } = req.body;
         const organizationId = req.redisData.organizationId;
         const userId = req.redisData.userId;
 
         const orgObj = {
             name,
             description,
+            status,
             organizationId,
-            userId
+            userId,
         };
 
         const result = await organizationService.patchUpdateOrganization(orgObj);
@@ -51,10 +52,10 @@ const patchUpdateOrganization = async (req, res, next) => {
 
 const deleteOrganization = async (req, res, next) => {
     try {
-        const orgId = parseInt(req.params.orgId);
+        const organizationId = parseInt(req.params.organizationId);
         const userId = req.redisData.userId;
 
-        const result = await organizationService.deleteOrganization(orgId, userId);
+        const result = await organizationService.deleteOrganization(organizationId, userId);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
@@ -77,7 +78,7 @@ const postInviteMember = async (req, res, next) => {
             invitedBy: userId
         };
 
-        const result = await organizationService.inviteMember(inviteObj);
+        const result = await organizationService.postInviteMember(inviteObj);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
@@ -90,7 +91,9 @@ const postInviteMember = async (req, res, next) => {
 
 const getCurrentOrganization = async (req, res, next) => {
     try {
-        const result = await organizationService.getCurrentOrganization(req.redisData);
+        const organizationId=req.redisData.organizationId
+
+        const result = await organizationService.getCurrentOrganization(organizationId);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
@@ -99,6 +102,7 @@ const getCurrentOrganization = async (req, res, next) => {
         return res.status(500).send(failureObj);
     }
 };
+
 
 module.exports = {
     postCreateOrganization,

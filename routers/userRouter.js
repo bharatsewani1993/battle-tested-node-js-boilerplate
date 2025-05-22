@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { validateAuth } = require('../middlewares/auth');
-const { postEmailMagicLink, getVerifyEmailOTP, deleteLogout, postSelectOrganization, getAcceptInvitation, getUserOrganizations, getOrganizationUsers } = require('../controllers/userController');
+const { postEmailMagicLink, getVerifyEmailOTP, deleteLogout, postSelectOrganization,getUserOrganizations,getOrganizationUsers,getAcceptInvitation } = require('../controllers/userController');
 const validate = require('../middlewares/validate');
-const { emailLoginValidations, emailOtpValidations, selectOrganizationValidation, acceptInvitationValidation, organizationUsersValidation } = require('../validations/userValidations');
+const { emailLoginValidations,organizationUsersValidation, emailOtpValidations,acceptInvitationValidation, selectOrganizationValidation } = require('../validations/userValidations');
 
 //for signup,sign-in we have single api.
 router.post('/email/magic-link', validate(emailLoginValidations), postEmailMagicLink);
@@ -23,5 +23,4 @@ router.get("/organizations", validateAuth, getUserOrganizations);
 
 // Route to get all users of the current selected organization
 router.get("/organization-users", validateAuth, validate(organizationUsersValidation), getOrganizationUsers);
-
 module.exports = router;

@@ -17,7 +17,8 @@ const createOrganization = async (orgObj) => {
         const insertObj = {
             name: orgObj.name,
             description: orgObj.description,
-            ownerId: orgObj.ownerId
+            ownerId: orgObj.ownerId,
+            status:'DRAFT'
         };
 
         // Create organization in database
@@ -77,7 +78,7 @@ const createOrganization = async (orgObj) => {
 
 const patchUpdateOrganization = async (orgObj) => {
     try {
-        const { name, description, organizationId, userId } = orgObj;
+        const { name, description,status, organizationId, userId } = orgObj;
 
         // First check if user is the owner of the organization
         const organization = await organizationModel.findOne({
@@ -96,7 +97,7 @@ const patchUpdateOrganization = async (orgObj) => {
 
         // Update organization
         await organizationModel.update(
-            { name, description },
+            { name, description,status },
             {
                 where: {
                     id: organizationId,
@@ -125,12 +126,12 @@ const patchUpdateOrganization = async (orgObj) => {
     }
 };
 
-const deleteOrganization = async (orgId, userId) => {
+const deleteOrganization = async (organizationId, userId) => {
     try {
         // First check if user is the owner of the organization
         const organization = await organizationModel.findOne({
             where: {
-                id: orgId,
+                id: organizationId,
                 ownerId: userId,
                 active: 1
             }
@@ -147,8 +148,9 @@ const deleteOrganization = async (orgId, userId) => {
             { active: 0 },
             {
                 where: {
-                    id: orgId,
-                    ownerId: userId
+                    id: organizationId,
+                    ownerId: userId,
+                    active:1
                 }
             }
         );
@@ -164,7 +166,7 @@ const deleteOrganization = async (orgId, userId) => {
     }
 };
 
-const inviteMember = async (inviteObj) => {
+const postInviteMember = async (inviteObj) => {
     try {
         const { email, roleId, organizationId, invitedBy } = inviteObj;
 
@@ -172,7 +174,7 @@ const inviteMember = async (inviteObj) => {
         const role = await roleModel.findOne({
             where: {
                 id: roleId,
-                organizationId,
+                organizationId:organizationId,
                 active: 1
             }
         });
@@ -200,7 +202,7 @@ const inviteMember = async (inviteObj) => {
         // Check if user exists, if not create one
         let user = await userModel.findOne({
             where: {
-                email,
+                email:email,
                 active: 1
             }
         });
@@ -209,7 +211,7 @@ const inviteMember = async (inviteObj) => {
         if (!user) {
             // Create a new user
             const newUser = await userModel.create({
-                email,
+                emal:email,
                 verified: 0,
                 active: 1
             });
@@ -221,8 +223,8 @@ const inviteMember = async (inviteObj) => {
         // Check if user is already a member of the organization
         const existingMember = await organizationUserModel.findOne({
             where: {
-                organizationId,
-                userId,
+                organizationId:organizationId,
+                userId:userId,
                 active: 1
             }
         });
@@ -249,9 +251,9 @@ const inviteMember = async (inviteObj) => {
         } else {
             // Create new invitation
             await organizationUserModel.create({
-                organizationId,
-                userId,
-                roleId,
+                organizationId:organizationId,
+                userId:userId,
+                roleId:roleId,
                 inviteStatus: 'pending',
                 invitedBy
             });
@@ -302,11 +304,8 @@ const inviteMember = async (inviteObj) => {
     }
 };
 
-const getCurrentOrganization = async (redisData) => {
+const getCurrentOrganization = async (organizationId) => {
     try {
-        const organizationId = redisData.organizationId;
-
-
         // Check if organization is selected
         if (!organizationId) {
             const failureObj = failure();
@@ -378,6 +377,6 @@ module.exports = {
     createOrganization,
     patchUpdateOrganization,
     deleteOrganization,
-    inviteMember,
+    postInviteMember,
     getCurrentOrganization
 }; 

@@ -11,9 +11,9 @@ const { set, get } = require('../services/redisService.js');
 const permissionModel = require('../models/permissionModel');
 const rolePermissionModel = require('../models/rolePermissionModel');
 const organizationUserModel = require('../models/organizationUserModel');
-const organizationModel = require('../models/organizationModel');
+const organizationModel=require('../models/organizationModel.js')
+const sequelize = require('../config/mysql');
 const roleModel = require('../models/roleModel');
-const { Sequelize } = require('sequelize');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -228,14 +228,14 @@ const postSelectOrganization = async (orgObj) => {
 }
 
 // Accept an invitation to join an organization
-const acceptInvitation = async (inviteObj) => {
+const getAcceptInvitation= async (inviteObj) => {
     try {
         const { organizationId, email } = inviteObj;
 
         // Find the user by email
         const user = await userModel.findOne({
             where: {
-                email,
+                email:email,
                 active: 1
             }
         });
@@ -333,12 +333,13 @@ const acceptInvitation = async (inviteObj) => {
 }
 
 // Get all organizations for a user
-const getUserOrganizations = async (userId) => {
+const getUserOrganizations = async (userId,options) => {
     try {
+        const {limit,page,sortBy,sortOrder,status}=options;
         // Find all organization-user relationships for this user
         const organizationUsers = await organizationUserModel.findAll({
             where: {
-                userId,
+                userId:userId,
                 active: 1,
                 inviteStatus: 'accepted'
             }
@@ -358,11 +359,14 @@ const getUserOrganizations = async (userId) => {
         const organizations = await organizationModel.findAll({
             where: {
                 id: organizationIds,
-                active: 1
+                active: 1,
+                ...(status && {status})
             },
-            attributes: ['id', 'name', 'description', 'ownerId', 'createdAt']
+            attributes: ['id', 'name', 'description', 'ownerId', 'createdAt','status'],
+            limit,
+            offset:(page-1) * limit,
+            order:[[sortBy,sortOrder]]
         });
-
         // Get user roles in each organization
         const orgDetails = await Promise.all(organizations.map(async (org) => {
             // Find user's role in this organization
@@ -389,6 +393,7 @@ const getUserOrganizations = async (userId) => {
                     id: role.id,
                     name: role.name
                 } : null,
+                status:org.status,
                 createdAt: org.createdAt
             };
         }));
@@ -407,152 +412,146 @@ const getUserOrganizations = async (userId) => {
 
 // Get all users of the current organization with pagination, sorting, and search
 const getOrganizationUsers = async (queryObj) => {
-    try {
-        const { organizationId, page = 1, limit = 10, search = '', sortBy = 'createdAt', sortOrder = 'desc' } = queryObj;
+  try {
+    let {
+      organizationId,
+      page = 1,
+      limit = 10,
+      search = '',
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = queryObj;
 
-        // Check if organization is selected
-        if (!organizationId) {
-            const failureObj = failure();
-            failureObj.status = 400;
-            failureObj.message = "Please select an organization first";
-            return failureObj;
-        }
-
-        // Calculate offset for pagination
-        const offset = (page - 1) * limit;
-
-        // Build the where condition for organization users
-        const whereCondition = {
-            organizationId: organizationId,
-            active: 1,
-            inviteStatus: 'accepted'
-        };
-
-        // Get users IDs from the organization
-        const orgUsers = await organizationUserModel.findAll({
-            where: whereCondition,
-            attributes: ['userId'],
-            raw: true
-        });
-
-        // Extract user IDs from results
-        const userIds = orgUsers.map(user => user.userId);
-
-        if (userIds.length === 0) {
-            const successObj = success();
-            successObj.message = "No users found in this organization";
-            successObj.data.push({
-                users: [],
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    totalPages: 0,
-                    totalCount: 0
-                }
-            });
-            return successObj;
-        }
-
-        // Build search condition if search parameter is provided
-        let userWhereCondition = {
-            id: userIds,
-            active: 1
-        };
-
-        if (search && search.trim() !== '') {
-            userWhereCondition = {
-                ...userWhereCondition,
-                [Sequelize.Op.or]: [
-                    { name: { [Sequelize.Op.like]: `%${search}%` } },
-                    { email: { [Sequelize.Op.like]: `%${search}%` } }
-                ]
-            };
-        }
-
-        // Get total count for pagination
-        const totalCount = await userModel.count({
-            where: userWhereCondition
-        });
-
-        // Calculate total pages
-        const totalPages = Math.ceil(totalCount / limit);
-
-        // Get user data with pagination and sorting
-        const users = await userModel.findAll({
-            where: userWhereCondition,
-            attributes: ['id', 'name', 'email', 'phone', 'countryCode', 'verified', 'createdAt', 'updatedAt'],
-            order: [
-                [sortBy, sortOrder.toUpperCase()]
-            ],
-            limit: parseInt(limit),
-            offset: offset
-        });
-
-        // Get role information for each user
-        const usersWithRoles = await Promise.all(users.map(async (user) => {
-            const userData = user.get({ plain: true });
-
-            // Get organization user data to determine the role
-            const orgUserData = await organizationUserModel.findOne({
-                where: {
-                    organizationId,
-                    userId: user.id,
-                    active: 1
-                },
-                attributes: ['roleId'],
-                raw: true
-            });
-
-            if (orgUserData && orgUserData.roleId) {
-                // Get role name
-                const roleData = await roleModel.findOne({
-                    where: {
-                        id: orgUserData.roleId,
-                        active: 1
-                    },
-                    attributes: ['name'],
-                    raw: true
-                });
-
-                userData.role = roleData ? roleData.name : null;
-                userData.roleId = orgUserData.roleId;
-            } else {
-                userData.role = null;
-                userData.roleId = null;
-            }
-
-            return userData;
-        }));
-
-        const successObj = success();
-        successObj.message = "Users fetched successfully";
-
-        // Format response according to specified structure
-        successObj.data.push({
-            users: usersWithRoles,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                totalPages,
-                totalCount
-            }
-        });
-
-        return successObj;
-    } catch (error) {
-        catchBlockErrorHandler(error);
-        const failureObj = failure();
-        failureObj.message = error.message;
-        return failureObj;
+    // Validation
+    if (!organizationId) {
+      const failureObj = failure();
+      failureObj.status = 400;
+      failureObj.message = "Please select an organization first";
+      return failureObj;
     }
+
+    // Parse pagination numbers safely
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Safe sort field handling
+    const allowedSortFields = ['createdAt', 'name', 'email'];
+    const finalSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const finalSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // Fetch active, accepted organization users
+    const orgUsers = await organizationUserModel.findAll({
+      where: {
+        organizationId:organizationId,
+        active: 1,
+        inviteStatus: 'accepted'
+      },
+      attributes: ['userId', 'roleId'],
+      raw: true
+    });
+     
+    const userIds=orgUsers.map(u=>u.userId);
+
+    if (userIds.length === 0) {
+      const successObj = success();
+      successObj.message = "No users found in this organization";
+      successObj.data = {
+        users: [],
+        pagination: {
+          page,
+          limit,
+          totalPages: 0,
+          totalCount: 0
+        }
+      };
+      return successObj;
+    }
+
+    // Prepare role and orgUser mappings
+    const roleIds = [...new Set(orgUsers.map(o => o.roleId).filter(Boolean))];
+    const orgUserMap = Object.fromEntries(orgUsers.map(o => [o.userId, o.roleId]));
+
+
+    // Fetch role details in bulk
+    let roleMap = {};
+    if (roleIds.length > 0) {
+      const roleDataList = await roleModel.findAll({
+        where: {
+          id: roleIds,
+          active: 1
+        },
+        attributes: ['id', 'name'],
+        raw: true
+      });
+      roleMap = Object.fromEntries(roleDataList.map(r => [r.id, r.name]));
+    }
+
+    // Build user search condition
+    const userWhereCondition = {
+      id: userIds,
+      active: 1
+    };
+
+    if (search?.trim()) {
+      userWhereCondition[sequelize.Op.or] = [
+        { name: { [sequelize.Op.like]: `%${search}%` } },
+        { email: { [sequelize.Op.like]: `%${search}%` } }
+      ];
+    }
+
+    // Get total count
+    const totalCount = await userModel.count({ where: userWhereCondition });
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Fetch paginated user data
+    const users = await userModel.findAll({
+      where: userWhereCondition,
+      attributes: ['id', 'email', 'phone', 'countryCode', 'verified', 'createdAt', 'updatedAt'],
+      order: [[finalSortBy, finalSortOrder]],
+      limit,
+      offset
+    });
+
+    // Map roles to users
+    const usersWithRoles = users.map(user => {
+      const userData = user.get({ plain: true });
+      const roleId = orgUserMap[user.id];
+      userData.roleId = roleId || null;
+      userData.role = roleId ? roleMap[roleId] || null : null;
+      return userData;
+    });
+
+    // Build success response
+    const successObj = success();
+    successObj.message = "Users fetched successfully";
+    successObj.data = {
+      users: usersWithRoles,
+      pagination: {
+        page,
+        limit,
+        totalPages,
+        totalCount
+      }
+    };
+
+    return successObj;
+  } catch (error) {
+    catchBlockErrorHandler(error);
+    const failureObj = failure();
+    failureObj.message = error.message;
+    return failureObj;
+  }
 };
+
 
 module.exports = {
     postEmailMagicLink,
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
-    acceptInvitation,
+    getAcceptInvitation,
+    getAcceptInvitation,
     getUserOrganizations,
     getOrganizationUsers
 }

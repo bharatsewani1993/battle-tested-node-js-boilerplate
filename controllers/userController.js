@@ -83,7 +83,7 @@ const getAcceptInvitation = async (req, res) => {
             email
         };
 
-        const result = await userService.acceptInvitation(inviteObj);
+        const result = await userService.getAcceptInvitation(inviteObj);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
@@ -98,7 +98,15 @@ const getUserOrganizations = async (req, res) => {
     try {
         const userId = req.redisData.userId;
 
-        const result = await userService.getUserOrganizations(userId);
+        const options={
+            limit:parseInt(req.query.limit) || 10,
+            page:parseInt(req.query.page) || 1,
+            sortBy:req.query.sortBy || 'createdAt',
+            sortOrder:req.query.sortOrder || 'DESC',
+            status:req.query.status
+        }
+
+        const result = await userService.getUserOrganizations(userId,options);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
