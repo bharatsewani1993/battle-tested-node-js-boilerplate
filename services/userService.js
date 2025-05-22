@@ -367,12 +367,10 @@ const getUserOrganizations = async (userId,options) => {
             offset:(page-1) * limit,
             order:[[sortBy,sortOrder]]
         });
-        console.log('Organizations',organizations);
         // Get user roles in each organization
         const orgDetails = await Promise.all(organizations.map(async (org) => {
             // Find user's role in this organization
             const orgUser = organizationUsers.find(ou => ou.organizationId === org.id);
-            console.log('orgUser',orgUser.roleId);
 
             // Get role details
             const role = await roleModel.findOne({
@@ -385,7 +383,6 @@ const getUserOrganizations = async (userId,options) => {
 
             // Check if user is the owner
             const isOwner = org.ownerId === userId;
-            console.log('isOwner',isOwner);
 
             return {
                 id: org.id,
@@ -446,16 +443,15 @@ const getOrganizationUsers = async (queryObj) => {
     // Fetch active, accepted organization users
     const orgUsers = await organizationUserModel.findAll({
       where: {
-        id:organizationId,
+        organizationId:organizationId,
         active: 1,
         inviteStatus: 'accepted'
       },
       attributes: ['userId', 'roleId'],
       raw: true
     });
-    console.log('orgg User findAll',orgUsers);
-
-    const userIds = orgUsers.map(o => o.userId);
+     
+    const userIds=orgUsers.map(u=>u.userId);
 
     if (userIds.length === 0) {
       const successObj = success();
@@ -476,8 +472,7 @@ const getOrganizationUsers = async (queryObj) => {
     const roleIds = [...new Set(orgUsers.map(o => o.roleId).filter(Boolean))];
     const orgUserMap = Object.fromEntries(orgUsers.map(o => [o.userId, o.roleId]));
 
-    console.log('role ids',roleIds);
-    console.log('Org uSer map',orgUserMap)
+
     // Fetch role details in bulk
     let roleMap = {};
     if (roleIds.length > 0) {
@@ -489,7 +484,6 @@ const getOrganizationUsers = async (queryObj) => {
         attributes: ['id', 'name'],
         raw: true
       });
-      console.log('role data list',roleDataList);
       roleMap = Object.fromEntries(roleDataList.map(r => [r.id, r.name]));
     }
 

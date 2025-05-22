@@ -18,7 +18,6 @@ router.post("/select-organization", validateAuth, validate(selectOrganizationVal
 // Route to accept an invitation to join an organization (GET endpoint - no auth required)
 router.get("/accept-invitation", validate(acceptInvitationValidation), getAcceptInvitation);
 
-
 // Route to get all organizations for the current logged-in user
 router.get("/organizations", validateAuth, getUserOrganizations);
 

@@ -167,7 +167,6 @@ const patchUpdateRole = async (roleObj) => {
                 }
             });
 
-            console.log(existingRole);
 
             if (existingRole) {
                 const failureObj = failure();
