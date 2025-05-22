@@ -14,7 +14,6 @@ const rolePermissionModel = require('../models/rolePermissionModel');
 const organizationUserModel = require('../models/organizationUserModel');
 const organizationModel=require('../models/organizationModel.js')
 const sequelize = require('../config/mysql');
-const { getAcceptInvitation } = require('../controllers/userController.js');
 
 const postEmailMagicLink = async (email) => {
     try {
@@ -229,7 +228,7 @@ const postSelectOrganization = async (orgObj) => {
 }
 
 // Accept an invitation to join an organization
-const acceptInvitation = async (inviteObj) => {
+const getAcceptInvitation= async (inviteObj) => {
     try {
         const { organizationId, email } = inviteObj;
 
@@ -368,12 +367,12 @@ const getUserOrganizations = async (userId,options) => {
             offset:(page-1) * limit,
             order:[[sortBy,sortOrder]]
         });
-
+        console.log('Organizations',organizations);
         // Get user roles in each organization
         const orgDetails = await Promise.all(organizations.map(async (org) => {
             // Find user's role in this organization
             const orgUser = organizationUsers.find(ou => ou.organizationId === org.id);
-            console.log('orgUser',orgUser);
+            console.log('orgUser',orgUser.roleId);
 
             // Get role details
             const role = await roleModel.findOne({
@@ -557,6 +556,7 @@ module.exports = {
     getVerifyEmailOTP,
     deleteLogout,
     postSelectOrganization,
+    getAcceptInvitation,
     getAcceptInvitation,
     getUserOrganizations,
     getOrganizationUsers

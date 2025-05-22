@@ -83,7 +83,7 @@ const getAcceptInvitation = async (req, res) => {
             email
         };
 
-        const result = await userService.acceptInvitation(inviteObj);
+        const result = await userService.getAcceptInvitation(inviteObj);
         return res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
