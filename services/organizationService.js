@@ -168,7 +168,7 @@ const deleteOrganization = async (organizationId, userId) => {
 
 const postInviteMember = async (inviteObj) => {
     try {
-        const { email, roleId, organizationId, invitedBy } = inviteObj;
+        const { email, roleId,fullName,organizationId, invitedBy } = inviteObj;
 
         // Check if the role belongs to the organization
         const role = await roleModel.findOne({
@@ -254,6 +254,7 @@ const postInviteMember = async (inviteObj) => {
                 organizationId:organizationId,
                 userId:userId,
                 roleId:roleId,
+                fullName:fullName,
                 inviteStatus: 'pending',
                 invitedBy
             });
@@ -291,6 +292,7 @@ const postInviteMember = async (inviteObj) => {
         successObj.data.push({
             email,
             organizationId,
+            fullName,
             organizationName: organization.name,
             roleName: role.name,
             userStatus: !user ? "New user (will be verified on acceptance)" : "Existing user"

@@ -2,6 +2,7 @@ const { success, failure } = require('../objects/return.objects');
 const roleModel = require('../models/roleModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { get } = require('./redisService.js');
+const {assignPermissionsToRole}=require('./permissionService.js')
 
 const getAllRoles = async (redisKey) => {
     try {
@@ -38,7 +39,6 @@ const getAllRoles = async (redisKey) => {
 
 const createRole = async (roleObj) => {
     try {
-        // Get organization ID from Redis using user ID
         const redisData = await get(roleObj.redisKey);
 
         if (!redisData.success || !redisData.data || !redisData.data.organizationId) {
@@ -49,7 +49,6 @@ const createRole = async (roleObj) => {
 
         const organizationId = redisData.data.organizationId;
 
-        // Check if a role with the same name already exists in this organization
         const existingRole = await roleModel.findOne({
             where: {
                 name: roleObj.name,
@@ -73,11 +72,33 @@ const createRole = async (roleObj) => {
             createdBy: redisData.data.userId
         };
 
-        // Create role in database
+        // Create role
         const createdRole = await roleModel.create(insertObj);
 
+        // 📝 If permissions are sent in roleObj.permissions — assign them
+        if (roleObj.permissionIds && Array.isArray(roleObj.permissionIds) && roleObj.permissionIds.length > 0) {
+            const permObj = {
+                roleId: createdRole.id,
+                permissionIds: roleObj.permissionIds,
+                redisKey: roleObj.redisKey,
+                userId: redisData.data.userId
+            };
+
+            const permissionResult = await assignPermissionsToRole(permObj);
+            console.log('permission result printed',permissionResult);
+
+            if (!permissionResult.success) {
+                const failureObj = failure();
+                failureObj.message = "Role created but failed to assign permissions: " + permissionResult.message;
+                return failureObj;
+            }
+        }
+
         const successObj = success();
-        successObj.data = createdRole;
+        successObj.data.push({
+            role:createdRole,
+            assignPermissions:roleObj.permissionIds || []
+        });
         successObj.message = "Role created successfully!";
         return successObj;
     } catch (error) {
@@ -87,6 +108,7 @@ const createRole = async (roleObj) => {
         return failureObj;
     }
 };
+
 
 const getRole = async (roleId, redisKey) => {
     try {

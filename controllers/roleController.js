@@ -17,9 +17,9 @@ const getAllRoles = async (req, res, next) => {
 
 const postCreateRole = async (req, res, next) => {
     try {
-        const { name, description, isDefault } = req.body;
+        const { name, description, isDefault,permissionIds } = req.body;
         const redisKey = req.redisData.key;
-        const roleObj = { name, description, isDefault, redisKey }
+        const roleObj = { name, description, isDefault, redisKey,permissionIds }
 
         const result = await roleService.createRole(roleObj);
         res.status(result.status).send(result);
