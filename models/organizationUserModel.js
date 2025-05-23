@@ -30,7 +30,8 @@ organizationUserModel.init({
     fullName:{
         type:DataTypes.STRING(),
         required:true,
-        allowNull:false
+        allowNull:false,
+        defaultValue:'XYZ'
     },
     inviteStatus: {
         type: DataTypes.STRING(50),

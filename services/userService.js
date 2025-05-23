@@ -1,3 +1,4 @@
+const { Sequelize } = require('sequelize');
 const ENV = require('../env/index').envSettings();
 const { success, failure } = require('../objects/return.objects');
 const userModel = require('../models/userModel');
@@ -335,7 +336,7 @@ const getAcceptInvitation= async (inviteObj) => {
 // Get all organizations for a user
 const getUserOrganizations = async (userId,options) => {
     try {
-        const {limit,page,sortBy,sortOrder,status}=options;
+        const {limit,offset,sortBy,sortOrder,status}=options;
         // Find all organization-user relationships for this user
         const organizationUsers = await organizationUserModel.findAll({
             where: {
@@ -356,7 +357,7 @@ const getUserOrganizations = async (userId,options) => {
         const organizationIds = organizationUsers.map(ou => ou.organizationId);
 
         // Get organization details
-        const organizations = await organizationModel.findAll({
+        const {count,rows}= await organizationModel.findAndCountAll({
             where: {
                 id: organizationIds,
                 active: 1,
@@ -364,11 +365,12 @@ const getUserOrganizations = async (userId,options) => {
             },
             attributes: ['id', 'name', 'description', 'ownerId', 'createdAt','status'],
             limit,
-            offset:(page-1) * limit,
+            offset:offset,
             order:[[sortBy,sortOrder]]
         });
+
         // Get user roles in each organization
-        const orgDetails = await Promise.all(organizations.map(async (org) => {
+        const orgDetails = await Promise.all(rows.map(async (org) => {
             // Find user's role in this organization
             const orgUser = organizationUsers.find(ou => ou.organizationId === org.id);
 
@@ -398,8 +400,21 @@ const getUserOrganizations = async (userId,options) => {
             };
         }));
 
+        const totalPages = Math.ceil(count / limit);
+        const currentPage = Math.floor(offset / limit) + 1;
+
         const successObj = success();
-        successObj.data = orgDetails;
+        successObj.data.push({
+            orgDetails,
+            pagination:{
+               totalItems:count,
+               page:currentPage,
+               limit,
+               totalPages,
+               hasPrevPage:currentPage<totalPages,
+               hasNextPage:currentPage>1
+            }
+        });
         successObj.message = "Organizations retrieved successfully";
         return successObj;
     } catch (error) {
@@ -503,6 +518,7 @@ const getOrganizationUsers = async (queryObj) => {
     // Get total count
     const totalCount = await userModel.count({ where: userWhereCondition });
     const totalPages = Math.ceil(totalCount / limit);
+    const currentPage = Math.floor(offset / limit) + 1;
 
     // Fetch paginated user data
     const users = await userModel.findAll({
@@ -528,10 +544,12 @@ const getOrganizationUsers = async (queryObj) => {
     successObj.data = {
       users: usersWithRoles,
       pagination: {
-        page,
+        totalItems:totalCount,
+        page:currentPage,
         limit,
         totalPages,
-        totalCount
+        hasNextPage:currentPage<totalPages,
+        hasPrevPage:currentPage>1
       }
     };
 

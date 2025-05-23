@@ -85,7 +85,6 @@ const createRole = async (roleObj) => {
             };
 
             const permissionResult = await assignPermissionsToRole(permObj);
-            console.log('permission result printed',permissionResult);
 
             if (!permissionResult.success) {
                 const failureObj = failure();
