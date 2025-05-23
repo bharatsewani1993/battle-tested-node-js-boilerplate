@@ -11,7 +11,7 @@ const getAllPermissions = async () => {
     try {
         const permissions = await permissionModel.findAll({
             where: {
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -46,7 +46,7 @@ const getRolePermissions = async (roleId, redisKey) => {
             where: {
                 id: roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -60,7 +60,7 @@ const getRolePermissions = async (roleId, redisKey) => {
         const rolePermissions = await rolePermissionModel.findAll({
             where: {
                 roleId: roleId,
-                active: 1
+                active: 'YES'
             },
             attributes: ['permissionId']
         });
@@ -73,7 +73,7 @@ const getRolePermissions = async (roleId, redisKey) => {
                 id: {
                     [Op.in]: permissionIds
                 },
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -116,7 +116,7 @@ const assignPermissionsToRole = async (permObj) => {
             where: {
                 id: roleId,
                 organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -132,7 +132,7 @@ const assignPermissionsToRole = async (permObj) => {
                 id: {
                     [Op.in]: permissionIds
                 },
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -153,7 +153,7 @@ const assignPermissionsToRole = async (permObj) => {
                 roleId,
                 permissionId,
                 createdBy: userId,
-                active: 1
+                active: 'YES'
             }));
             await rolePermissionModel.bulkCreate(rolePermissions);
         }

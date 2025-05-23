@@ -20,7 +20,7 @@ const postEmailMagicLink = async (email) => {
     try {
         const emailExist = await userModel.findOne({
             where: {
-                active: 1,
+                active: 'YES',
                 email: email
             }
         });
@@ -96,7 +96,7 @@ const getVerifyEmailOTP = async (otpObj) => {
                 {
                     where: {
                         id: userId,
-                        active: 1
+                        active: 'YES'
                     }
                 }
             )
@@ -168,7 +168,7 @@ const postSelectOrganization = async (orgObj) => {
             where: {
                 organizationId,
                 userId,
-                active: 1,
+                active: 'YES',
                 inviteStatus: 'accepted'
             }
         });
@@ -186,7 +186,7 @@ const postSelectOrganization = async (orgObj) => {
         const rolePermissionsData = await rolePermissionModel.findAll({
             where: {
                 roleId,
-                active: 1
+                active: 'YES'
             },
             attributes: ['permissionId']
         });
@@ -198,7 +198,7 @@ const postSelectOrganization = async (orgObj) => {
         const permissionsData = await permissionModel.findAll({
             where: {
                 id: permissionIds,
-                active: 1
+                active: 'YES'
             },
             attributes: ['key']
         });
@@ -237,7 +237,7 @@ const getAcceptInvitation= async (inviteObj) => {
         const user = await userModel.findOne({
             where: {
                 email:email,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -261,7 +261,7 @@ const getAcceptInvitation= async (inviteObj) => {
         const organization = await organizationModel.findOne({
             where: {
                 id: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -276,7 +276,7 @@ const getAcceptInvitation= async (inviteObj) => {
             where: {
                 organizationId,
                 userId: user.id,
-                active: 1,
+                active: 'YES',
                 inviteStatus: 'pending'
             }
         });
@@ -292,7 +292,7 @@ const getAcceptInvitation= async (inviteObj) => {
             where: {
                 id: invitation.roleId,
                 organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -341,7 +341,7 @@ const getUserOrganizations = async (userId,options) => {
         const organizationUsers = await organizationUserModel.findAll({
             where: {
                 userId:userId,
-                active: 1,
+                active: 'YES',
                 inviteStatus: 'accepted'
             }
         });
@@ -360,7 +360,7 @@ const getUserOrganizations = async (userId,options) => {
         const {count,rows}= await organizationModel.findAndCountAll({
             where: {
                 id: organizationIds,
-                active: 1,
+                active: 'YES',
                 ...(status && {status})
             },
             attributes: ['id', 'name', 'description', 'ownerId', 'createdAt','status'],
@@ -378,7 +378,7 @@ const getUserOrganizations = async (userId,options) => {
             const role = await roleModel.findOne({
                 where: {
                     id: orgUser.roleId,
-                    active: 1
+                    active: 'YES'
                 },
                 attributes: ['id', 'name']
             });
@@ -459,7 +459,7 @@ const getOrganizationUsers = async (queryObj) => {
     const orgUsers = await organizationUserModel.findAll({
       where: {
         organizationId:organizationId,
-        active: 1,
+        active:'YES',
         inviteStatus: 'accepted'
       },
       attributes: ['userId', 'roleId'],
@@ -494,7 +494,7 @@ const getOrganizationUsers = async (queryObj) => {
       const roleDataList = await roleModel.findAll({
         where: {
           id: roleIds,
-          active: 1
+          active: 'YES'
         },
         attributes: ['id', 'name'],
         raw: true
@@ -505,7 +505,7 @@ const getOrganizationUsers = async (queryObj) => {
     // Build user search condition
     const userWhereCondition = {
       id: userIds,
-      active: 1
+      active: 'YES'
     };
 
     if (search?.trim()) {

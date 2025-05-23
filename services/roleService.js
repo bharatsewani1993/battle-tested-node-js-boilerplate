@@ -21,7 +21,7 @@ const getAllRoles = async (redisKey) => {
         const roles = await roleModel.findAll({
             where: {
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -53,7 +53,7 @@ const createRole = async (roleObj) => {
             where: {
                 name: roleObj.name,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -127,7 +127,7 @@ const getRole = async (roleId, redisKey) => {
             where: {
                 id: roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -167,7 +167,7 @@ const patchUpdateRole = async (roleObj) => {
             where: {
                 id: roleObj.roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES',
             }
         });
 
@@ -183,7 +183,7 @@ const patchUpdateRole = async (roleObj) => {
                 where: {
                     name: roleObj.name,
                     organizationId: organizationId,
-                    active: 1,
+                    active: 'YES',
                     id: { [require('sequelize').Op.ne]: roleObj.roleId } // Exclude current role
                 }
             });
@@ -211,7 +211,7 @@ const patchUpdateRole = async (roleObj) => {
         const updatedRole = await roleModel.findOne({
             where: {
                 id: roleObj.roleId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -245,7 +245,7 @@ const deleteRole = async (roleId, redisKey) => {
             where: {
                 id: roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -264,11 +264,12 @@ const deleteRole = async (roleId, redisKey) => {
 
         // Soft delete by setting active to 0
         await roleModel.update(
-            { active: 0 },
+            { active: 'NO' },
             {
                 where: {
                     id: roleId,
-                    organizationId: organizationId
+                    organizationId: organizationId,
+                    active:'YES'
                 }
             }
         );

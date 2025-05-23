@@ -76,7 +76,7 @@ const postInviteMember = async (req, res, next) => {
             roleId,
             fullName,
             organizationId,
-            invitedBy: userId
+            invitedBy: userId,
         };
 
         const result = await organizationService.postInviteMember(inviteObj);

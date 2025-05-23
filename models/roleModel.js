@@ -37,9 +37,9 @@ roleModel.init({
         allowNull: false
     },
     active: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.ENUM('YES','NO'),
         allowNull: false,
-        defaultValue: 1
+        defaultValue: 'YES'
     }
 },
     {
