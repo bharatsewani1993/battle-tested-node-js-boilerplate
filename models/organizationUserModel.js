@@ -27,12 +27,6 @@ organizationUserModel.init({
         type: DataTypes.INTEGER(),
         allowNull: false
     },
-    fullName:{
-        type:DataTypes.STRING(),
-        required:true,
-        allowNull:false,
-        defaultValue:'XYZ'
-    },
     inviteStatus: {
         type: DataTypes.STRING(50),
         allowNull: false,

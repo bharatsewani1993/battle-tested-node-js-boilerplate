@@ -15,7 +15,7 @@ userModel.init({
         autoIncrement: true,
         primaryKey: true
     },
-    name: {
+    fullName: {
         type: DataTypes.STRING(500),
         allowNull: true
     },

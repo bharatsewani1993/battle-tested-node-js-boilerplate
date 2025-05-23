@@ -212,16 +212,18 @@ const postInviteMember = async (inviteObj) => {
             const newUser = await userModel.create({
                 email:email,
                 verified: 0,
+                fullName:fullName,
                 active: 'YES'
             });
-            console.log('new User',newUser)
             userId = newUser.id;
         } else {
             userId = user.id;
+            await user.update({
+                fullName:fullName
+            })
+            await user.reload();
         }
 
-        console.log('userID',userId);
-        console.log('organizationId',organizationId)
 
         // Check if user is already a member of the organization
         const existingMember = await organizationUserModel.findOne({
@@ -232,7 +234,6 @@ const postInviteMember = async (inviteObj) => {
             }
         });
 
-        console.log('existing Member',existingMember);
 
         if (existingMember) {
             if (existingMember.inviteStatus === 'accepted') {
@@ -244,7 +245,6 @@ const postInviteMember = async (inviteObj) => {
                 await organizationUserModel.update(
                     {
                         roleId,
-                        fullName,
                         invitedBy
                     },
                     {
@@ -260,7 +260,6 @@ const postInviteMember = async (inviteObj) => {
                 organizationId:organizationId,
                 userId:userId,
                 roleId:roleId,
-                fullName:fullName,
                 inviteStatus: 'pending',
                 invitedBy,
             });
