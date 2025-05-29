@@ -4,8 +4,9 @@ const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { get } = require('./redisService.js');
 const {assignPermissionsToRole}=require('./permissionService.js')
 
-const getAllRoles = async (redisKey) => {
+const getAllRoles = async (redisKey,options) => {
     try {
+        const {limit,offset,sortBy,sortOrder}=options;
         // Get organization ID from Redis using user ID
         const redisData = await get(redisKey);
 
@@ -18,15 +19,33 @@ const getAllRoles = async (redisKey) => {
         const organizationId = redisData.data.organizationId;
 
         // Get all active roles for the organization
-        const roles = await roleModel.findAll({
+        const {count,rows}= await roleModel.findAndCountAll({
             where: {
                 organizationId: organizationId,
                 active: 'YES'
-            }
+            },
+            limit,
+            offset:offset,
+            order:[[sortBy,sortOrder]]
         });
 
+        console.log('rows printed',rows);
+
+        const totalPages=Math.ceil(count/limit);
+        const currentPage=Math.floor(offset/limit) + 1;
+
         const successObj = success();
-        successObj.data = roles;
+        successObj.data.push({
+            rows,
+            pagination:{
+               totalItems:count,
+               page:currentPage,
+               limit,
+               totalPages,
+               hasPrevPage:currentPage<totalPages,
+               hasNextPage:currentPage>1
+            }
+        });
         successObj.message = "Roles retrieved successfully";
         return successObj;
     } catch (error) {

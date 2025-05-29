@@ -1,6 +1,6 @@
 module.exports = {
     STAGE: 'LOCAL',
-    PORT: 3000,
+    PORT: 4000,
     DATABASE_NAME: 'node-js-boilerplate',
     DATABASE_USER: 'root',
     DATABASE_PASSWORD: 'Aakash@0201',

@@ -102,7 +102,7 @@ const getUserOrganizations = async (req, res) => {
 
         const options={
             limit:limit?parseInt(limit) : 10,
-            offset:limit?parseInt(page-1) * (limit?limit:10) : 1,
+            offset:page?parseInt(page-1) * (limit?limit:10) : 1,
             sortBy:sortBy?sortBy:'createdAt',
             sortOrder:sortOrder?sortOrder:'desc',
             status:status
