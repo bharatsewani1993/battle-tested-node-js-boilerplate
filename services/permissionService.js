@@ -15,8 +15,18 @@ const getAllPermissions = async () => {
             }
         });
 
+        const groupedPermissions={};
+
+        permissions.forEach(permission=>{
+            const moduleKey=permission.module;
+            if(!groupedPermissions[moduleKey]){
+                groupedPermissions[moduleKey]=[]
+            }
+            groupedPermissions[moduleKey].push(permission)  
+        })
+
         const successObj = success();
-        successObj.data = permissions;
+        successObj.data = groupedPermissions;
         successObj.message = "Permissions retrieved successfully";
         return successObj;
     } catch (error) {
