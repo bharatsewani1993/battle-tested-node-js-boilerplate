@@ -31,7 +31,6 @@ const createOrganization = async (orgObj) => {
             isDefault: 0,  // Not a default role, but a custom one
             organizationId: createdOrg.id,
             createdBy: orgObj.ownerId,
-            active: 1
         });
 
         // Add owner to organization_users table with the new roleId
@@ -85,7 +84,7 @@ const patchUpdateOrganization = async (orgObj) => {
             where: {
                 id: organizationId,
                 ownerId: userId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -102,7 +101,7 @@ const patchUpdateOrganization = async (orgObj) => {
                 where: {
                     id: organizationId,
                     ownerId: userId,
-                    active: 1
+                    active: 'YES'
                 }
             }
         );
@@ -110,7 +109,7 @@ const patchUpdateOrganization = async (orgObj) => {
         const updatedOrg = await organizationModel.findOne({
             where: {
                 id: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -133,7 +132,7 @@ const deleteOrganization = async (organizationId, userId) => {
             where: {
                 id: organizationId,
                 ownerId: userId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -145,12 +144,12 @@ const deleteOrganization = async (organizationId, userId) => {
 
         // Soft delete by setting active to 0
         await organizationModel.update(
-            { active: 0 },
+            { active: 'NO' },
             {
                 where: {
                     id: organizationId,
                     ownerId: userId,
-                    active:1
+                    active:'YES'
                 }
             }
         );
@@ -168,14 +167,14 @@ const deleteOrganization = async (organizationId, userId) => {
 
 const postInviteMember = async (inviteObj) => {
     try {
-        const { email, roleId, organizationId, invitedBy } = inviteObj;
+        const { email, roleId,fullName,organizationId, invitedBy } = inviteObj;
 
         // Check if the role belongs to the organization
         const role = await roleModel.findOne({
             where: {
                 id: roleId,
                 organizationId:organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -189,7 +188,7 @@ const postInviteMember = async (inviteObj) => {
         const organization = await organizationModel.findOne({
             where: {
                 id: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -203,7 +202,7 @@ const postInviteMember = async (inviteObj) => {
         let user = await userModel.findOne({
             where: {
                 email:email,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -211,23 +210,30 @@ const postInviteMember = async (inviteObj) => {
         if (!user) {
             // Create a new user
             const newUser = await userModel.create({
-                emal:email,
+                email:email,
                 verified: 0,
-                active: 1
+                fullName:fullName,
+                active: 'YES'
             });
             userId = newUser.id;
         } else {
             userId = user.id;
+            await user.update({
+                fullName:fullName
+            })
+            await user.reload();
         }
+
 
         // Check if user is already a member of the organization
         const existingMember = await organizationUserModel.findOne({
             where: {
                 organizationId:organizationId,
                 userId:userId,
-                active: 1
+                active: 'YES'
             }
         });
+
 
         if (existingMember) {
             if (existingMember.inviteStatus === 'accepted') {
@@ -255,7 +261,7 @@ const postInviteMember = async (inviteObj) => {
                 userId:userId,
                 roleId:roleId,
                 inviteStatus: 'pending',
-                invitedBy
+                invitedBy,
             });
         }
 
@@ -291,6 +297,7 @@ const postInviteMember = async (inviteObj) => {
         successObj.data.push({
             email,
             organizationId,
+            fullName,
             organizationName: organization.name,
             roleName: role.name,
             userStatus: !user ? "New user (will be verified on acceptance)" : "Existing user"
@@ -318,7 +325,7 @@ const getCurrentOrganization = async (organizationId) => {
         const organization = await organizationModel.findOne({
             where: {
                 id: organizationId,
-                active: 1
+                active: 'YES'
             },
             attributes: ['id', 'name', 'description', 'ownerId', 'createdAt', 'updatedAt']
         });
@@ -333,7 +340,7 @@ const getCurrentOrganization = async (organizationId) => {
         const owner = await userModel.findOne({
             where: {
                 id: organization.ownerId,
-                active: 1
+                active: 'YES'
             },
             attributes: ['id', 'name', 'email']
         });
@@ -342,7 +349,7 @@ const getCurrentOrganization = async (organizationId) => {
         const memberCount = await organizationUserModel.count({
             where: {
                 organizationId: organizationId,
-                active: 1,
+                active: 'YES',
                 inviteStatus: 'accepted'
             }
         });

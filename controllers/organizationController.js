@@ -67,15 +67,16 @@ const deleteOrganization = async (req, res, next) => {
 
 const postInviteMember = async (req, res, next) => {
     try {
-        const { email, roleId } = req.body;
+        const { email, roleId,fullName } = req.body;
         const organizationId = req.redisData.organizationId;
         const userId = req.redisData.userId;
 
         const inviteObj = {
             email,
             roleId,
+            fullName,
             organizationId,
-            invitedBy: userId
+            invitedBy: userId,
         };
 
         const result = await organizationService.postInviteMember(inviteObj);

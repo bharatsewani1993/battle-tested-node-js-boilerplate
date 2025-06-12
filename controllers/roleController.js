@@ -5,7 +5,16 @@ const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const getAllRoles = async (req, res, next) => {
     try {
         const redisKey = req.redisData.key;
-        const result = await roleService.getAllRoles(redisKey);
+
+        const {limit,page,sortBy,sortOrder}=req.query;
+        
+        const options={
+            limit:limit?parseInt(limit):10,
+            offset:page?parseInt(page-1) * (limit?parseInt(limit):10) : 0,
+            sortBy:sortBy?sortBy:'createdAt',
+            sortOrder:sortOrder?sortOrder:'desc',
+        }
+        const result = await roleService.getAllRoles(redisKey,options);
         res.status(result.status).send(result);
     } catch (error) {
         catchBlockErrorHandler(error);
@@ -17,9 +26,9 @@ const getAllRoles = async (req, res, next) => {
 
 const postCreateRole = async (req, res, next) => {
     try {
-        const { name, description, isDefault } = req.body;
+        const { name, description, isDefault,permissionIds } = req.body;
         const redisKey = req.redisData.key;
-        const roleObj = { name, description, isDefault, redisKey }
+        const roleObj = { name, description, isDefault, redisKey,permissionIds }
 
         const result = await roleService.createRole(roleObj);
         res.status(result.status).send(result);

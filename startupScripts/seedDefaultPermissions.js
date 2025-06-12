@@ -16,7 +16,7 @@ const seedDefaultPermissions = async () => {
                     ...perm,
                     isDefault: 1,
                     createdBy: 0, // system
-                    active: 1
+                    active: 'YES'
                 }
             });
 

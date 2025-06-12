@@ -2,9 +2,11 @@ const { success, failure } = require('../objects/return.objects');
 const roleModel = require('../models/roleModel');
 const { catchBlockErrorHandler } = require('../utils/errorHandler');
 const { get } = require('./redisService.js');
+const {assignPermissionsToRole}=require('./permissionService.js')
 
-const getAllRoles = async (redisKey) => {
+const getAllRoles = async (redisKey,options) => {
     try {
+        const {limit,offset,sortBy,sortOrder}=options;
         // Get organization ID from Redis using user ID
         const redisData = await get(redisKey);
 
@@ -17,15 +19,33 @@ const getAllRoles = async (redisKey) => {
         const organizationId = redisData.data.organizationId;
 
         // Get all active roles for the organization
-        const roles = await roleModel.findAll({
+        const {count,rows}= await roleModel.findAndCountAll({
             where: {
                 organizationId: organizationId,
-                active: 1
-            }
+                active: 'YES'
+            },
+            limit,
+            offset:offset,
+            order:[[sortBy,sortOrder]]
         });
 
+        console.log('rows printed',rows);
+
+        const totalPages=Math.ceil(count/limit);
+        const currentPage=Math.floor(offset/limit) + 1;
+
         const successObj = success();
-        successObj.data = roles;
+        successObj.data.push({
+            rows,
+            pagination:{
+               totalItems:count,
+               page:currentPage,
+               limit,
+               totalPages,
+               hasPrevPage:currentPage<totalPages,
+               hasNextPage:currentPage>1
+            }
+        });
         successObj.message = "Roles retrieved successfully";
         return successObj;
     } catch (error) {
@@ -38,7 +58,6 @@ const getAllRoles = async (redisKey) => {
 
 const createRole = async (roleObj) => {
     try {
-        // Get organization ID from Redis using user ID
         const redisData = await get(roleObj.redisKey);
 
         if (!redisData.success || !redisData.data || !redisData.data.organizationId) {
@@ -49,12 +68,11 @@ const createRole = async (roleObj) => {
 
         const organizationId = redisData.data.organizationId;
 
-        // Check if a role with the same name already exists in this organization
         const existingRole = await roleModel.findOne({
             where: {
                 name: roleObj.name,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -73,11 +91,32 @@ const createRole = async (roleObj) => {
             createdBy: redisData.data.userId
         };
 
-        // Create role in database
+        // Create role
         const createdRole = await roleModel.create(insertObj);
 
+        // 📝 If permissions are sent in roleObj.permissions — assign them
+        if (roleObj.permissionIds && Array.isArray(roleObj.permissionIds) && roleObj.permissionIds.length > 0) {
+            const permObj = {
+                roleId: createdRole.id,
+                permissionIds: roleObj.permissionIds,
+                redisKey: roleObj.redisKey,
+                userId: redisData.data.userId
+            };
+
+            const permissionResult = await assignPermissionsToRole(permObj);
+
+            if (!permissionResult.success) {
+                const failureObj = failure();
+                failureObj.message = "Role created but failed to assign permissions: " + permissionResult.message;
+                return failureObj;
+            }
+        }
+
         const successObj = success();
-        successObj.data = createdRole;
+        successObj.data.push({
+            role:createdRole,
+            assignPermissions:roleObj.permissionIds || []
+        });
         successObj.message = "Role created successfully!";
         return successObj;
     } catch (error) {
@@ -87,6 +126,7 @@ const createRole = async (roleObj) => {
         return failureObj;
     }
 };
+
 
 const getRole = async (roleId, redisKey) => {
     try {
@@ -106,7 +146,7 @@ const getRole = async (roleId, redisKey) => {
             where: {
                 id: roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -146,7 +186,7 @@ const patchUpdateRole = async (roleObj) => {
             where: {
                 id: roleObj.roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES',
             }
         });
 
@@ -162,7 +202,7 @@ const patchUpdateRole = async (roleObj) => {
                 where: {
                     name: roleObj.name,
                     organizationId: organizationId,
-                    active: 1,
+                    active: 'YES',
                     id: { [require('sequelize').Op.ne]: roleObj.roleId } // Exclude current role
                 }
             });
@@ -190,7 +230,7 @@ const patchUpdateRole = async (roleObj) => {
         const updatedRole = await roleModel.findOne({
             where: {
                 id: roleObj.roleId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -224,7 +264,7 @@ const deleteRole = async (roleId, redisKey) => {
             where: {
                 id: roleId,
                 organizationId: organizationId,
-                active: 1
+                active: 'YES'
             }
         });
 
@@ -243,11 +283,12 @@ const deleteRole = async (roleId, redisKey) => {
 
         // Soft delete by setting active to 0
         await roleModel.update(
-            { active: 0 },
+            { active: 'NO' },
             {
                 where: {
                     id: roleId,
-                    organizationId: organizationId
+                    organizationId: organizationId,
+                    active:'YES'
                 }
             }
         );

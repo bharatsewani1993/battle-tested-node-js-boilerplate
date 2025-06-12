@@ -15,7 +15,7 @@ userModel.init({
         autoIncrement: true,
         primaryKey: true
     },
-    name: {
+    fullName: {
         type: DataTypes.STRING(500),
         allowNull: true
     },
@@ -37,9 +37,9 @@ userModel.init({
         defaultValue: 0
     },
     active: {
-        type: DataTypes.UUID(1),
+        type: DataTypes.ENUM('YES','NO'),
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: 'YES',
     },
 
 },

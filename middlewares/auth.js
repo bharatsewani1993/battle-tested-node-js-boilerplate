@@ -17,7 +17,6 @@ const createAuthentication = async (tokenDetails) => {
 const validateAuth = async (req, res, next) => {
   try {
     if (!req.headers.authorization) {
-      console.log("No authorization header");
       return res.status(401).send({
         success: false,
         message: "Login required",

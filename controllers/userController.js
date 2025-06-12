@@ -98,12 +98,14 @@ const getUserOrganizations = async (req, res) => {
     try {
         const userId = req.redisData.userId;
 
+        const {limit,page,sortBy,sortOrder,status}=req.query;
+
         const options={
-            limit:parseInt(req.query.limit) || 10,
-            page:parseInt(req.query.page) || 1,
-            sortBy:req.query.sortBy || 'createdAt',
-            sortOrder:req.query.sortOrder || 'DESC',
-            status:req.query.status
+            limit:limit?parseInt(limit) : 10,
+            offset:page?parseInt(page-1) * (limit?limit:10) : 1,
+            sortBy:sortBy?sortBy:'createdAt',
+            sortOrder:sortOrder?sortOrder:'desc',
+            status:status
         }
 
         const result = await userService.getUserOrganizations(userId,options);
